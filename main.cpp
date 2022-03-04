@@ -28,33 +28,8 @@ public:
 
 bool PseudoServerTracker::OnInit()
 {
-
     RemoteDataInterpreter *frame = new RemoteDataInterpreter();
     frame->Show();
-
-
-
-//    boost::asio::io_context io_context;
-//    std::shared_ptr<boost::asio::io_context::work> work(new boost::asio::io_context::work(io_context));
-////    std::thread server([&](){
-////
-////
-////        PseudoServerContext pseudoServerContext(io_context, 8000);
-////        pseudoServerContext.async_accept();
-////        io_context.run();
-////    }
-////        );
-//    auto a1 = std::async([&io_context](){});
-//   // work.reset();
-//
-//   // boost::thread t;//(&boost::asio::io_context::run, &io_context);
-//
-//    std::cout<<"window join\n";
-//    //server.join();
-//    std::cout<<"server join\n";
-
-
-    //server.join();
 
     return true;
 }

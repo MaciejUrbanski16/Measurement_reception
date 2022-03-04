@@ -102,7 +102,8 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
 
 void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     std::cout<< "On connect button" << std::endl;
-    initAccepting();
+    std::array<char, 25> buff{"11 22 33 44 55 "};
+    RemoteDataHandler remoteDataHandler(buff);
 }
 void RemoteDataInterpreter::OnPaint(wxPaintEvent & event){
     wxPaintDC dc(this);
