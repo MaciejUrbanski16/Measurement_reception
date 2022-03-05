@@ -6,23 +6,23 @@
 #include <iostream>
 #include "RemoteDataHandler.h"
 
-uint16_t RemoteDataHandler::getAzimut() const {
+float RemoteDataHandler::getAzimut() const {
     return azimut;
 }
 
-uint16_t RemoteDataHandler::getXAcceleration() const {
+int32_t RemoteDataHandler::getXAcceleration() const {
     return xAcceleration;
 }
 
-uint16_t RemoteDataHandler::getYAcceleration() const {
+int32_t RemoteDataHandler::getYAcceleration() const {
     return yAcceleration;
 }
 
-uint16_t RemoteDataHandler::getZAcceleration() const {
+int32_t RemoteDataHandler::getZAcceleration() const {
     return zAcceleration;
 }
 
-uint16_t RemoteDataHandler::getTimeIntervalMs() const {
+int32_t RemoteDataHandler::getTimeIntervalMs() const {
     return timeIntervalMs;
 }
 
@@ -36,8 +36,14 @@ void RemoteDataHandler::calculateAzimut() {
         {
             azimutAsString += buffer.at(i);
         }
-        azimut = atoi(azimutAsString.c_str());
-        std::cout<<"azimut "<<azimutAsString<<"A"<<azimut<<std::endl;
+        int azimutIntegral = atoi(azimutAsString.c_str());
+        if(isAzimutValid(azimutIntegral)) {
+            azimut = static_cast<float>(azimutIntegral) / 10.0f;
+            std::cout << "azimut " << azimutAsString << "A" << azimut << std::endl;
+        }
+        else{
+            std::cout<<"INCOMING AZIMUT: " << azimutIntegral <<" NOT VALID" << std::endl;
+        }
     } else{
         std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
@@ -62,7 +68,7 @@ void RemoteDataHandler::calculateXAcceleration() {
 void RemoteDataHandler::calculateYAcceleration() {
     std::string yAccelerationAsString{};
     const auto itr = std::find(buffer.begin() + actualIndexProcessing + 1, buffer.end(), ' ');
-    const uint16_t previousIndexProcessing{actualIndexProcessing};
+    const uint32_t previousIndexProcessing{actualIndexProcessing};
     actualIndexProcessing = std::distance(buffer.begin() + actualIndexProcessing, itr) + actualIndexProcessing;
     if(itr != buffer.end()) {
         for (auto i{previousIndexProcessing + 1}; i < actualIndexProcessing; i++) {
@@ -105,4 +111,8 @@ void RemoteDataHandler::calculateTimeIntervalMs() {
     } else{
         std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
+}
+
+bool RemoteDataHandler::isAzimutValid(int incomingAzimut) {
+    return incomingAzimut >= -1800 && incomingAzimut <= 1800;
 }

@@ -7,6 +7,7 @@
 
 #include <wx/wx.h>
 #include "wx/socket.h"
+#include "VelocityCalculator.h"
 
 class PseudoServerContext;
 
@@ -36,12 +37,19 @@ private:
 
     wxMenuBar *menuBar{nullptr};
     wxSocketServer *sock{nullptr};
+    wxPanel *panel{nullptr};
+    wxPanel* panel1{nullptr};
 
     int numClients{0};
     int numOfMsg{0};
     constexpr static uint16_t portNr{8000u};
 
     void establishServerListening();
+
+    float actualAzimutDeg{0.0f};
+    VelocityCalculator velocityCalculator;
+
+    void refreshPanel();
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H

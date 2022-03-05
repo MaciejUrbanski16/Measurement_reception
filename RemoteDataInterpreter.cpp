@@ -14,7 +14,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     menuBar = new wxMenuBar();
     this->SetMenuBar(menuBar);
     wxPoint point(30,50);
-    wxPanel *panel = new wxPanel();
+    panel = new wxPanel();
 
     this->Connect(wxEVT_PAINT, wxPaintEventHandler(RemoteDataInterpreter::OnPaint));
 
@@ -28,7 +28,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
 
     wxImage::AddHandler(new wxPNGHandler);
 
-    wxPanel* panel1 = new wxPanel(this, wxID_ANY);
+    panel1 = new wxPanel(this, wxID_ANY);
     wxButton *button;
     button = new wxButton(panel1, 1000, _T("Connect"), wxPoint(10,10), wxDefaultSize, 0);
 
@@ -82,7 +82,7 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
 {
 
     std::cout<<"On socket\n";
-    std::array<char, 25> buf{};
+    std::array<char, 100> buf{};
     std::string in{};
     char buffer[25];
     numOfMsg++;
@@ -102,8 +102,14 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
 
 void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     std::cout<< "On connect button" << std::endl;
-    std::array<char, 25> buff{"11 22 33 44 55 "};
+    std::array<char, 100> buff{"1222 220000 3378976 446789 7 "};
     RemoteDataHandler remoteDataHandler(buff);
+    auto vel{remoteDataHandler.getXAcceleration()};
+    actualAzimutDeg = remoteDataHandler.getAzimut();
+    std::cout<<"Azimut: "<<actualAzimutDeg<<std::endl;
+    velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(), remoteDataHandler.getTimeIntervalMs());
+    std::cout<<"Actual velocity:" << velocityCalculator.getActualVelocity()<<std::endl;
+    refreshPanel();
 }
 void RemoteDataInterpreter::OnPaint(wxPaintEvent & event){
     wxPaintDC dc(this);
@@ -146,4 +152,8 @@ void RemoteDataInterpreter::establishServerListening() {
     sock->SetEventHandler(*this, static_cast<int>(ConnectionUtils::SERVER_ID));
     sock->SetNotify(wxSOCKET_CONNECTION_FLAG);
     sock->Notify(true);
+}
+
+void RemoteDataInterpreter::refreshPanel() {
+    //...
 }

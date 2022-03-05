@@ -9,7 +9,7 @@
 #include <array>
 #include <cstdint>
 
-constexpr static unsigned bufferSize{25u};
+constexpr static unsigned bufferSize{100u};
 
 class RemoteDataHandler {
 public:
@@ -22,11 +22,11 @@ public:
         calculateTimeIntervalMs();
     }
 
-    uint16_t getAzimut() const;
-    uint16_t getXAcceleration() const;
-    uint16_t getYAcceleration() const;
-    uint16_t getZAcceleration() const;
-    uint16_t getTimeIntervalMs() const;
+    float getAzimut() const;
+    int32_t getXAcceleration() const;
+    int32_t getYAcceleration() const;
+    int32_t getZAcceleration() const;
+    int32_t getTimeIntervalMs() const;
 
 private:
     std::array<char, bufferSize> buffer{};
@@ -37,12 +37,14 @@ private:
     void calculateZAcceleration();
     void calculateTimeIntervalMs();
 
-    uint16_t azimut{};
-    uint16_t xAcceleration{};
-    uint16_t yAcceleration{};
-    uint16_t zAcceleration{};
-    uint16_t timeIntervalMs{};
-    uint16_t actualIndexProcessing;
+    float azimut{};
+    int32_t xAcceleration{};
+    int32_t yAcceleration{};
+    int32_t zAcceleration{};
+    int32_t timeIntervalMs{};
+    uint32_t actualIndexProcessing;
+
+    bool isAzimutValid(int incomingAzimut);
 };
 
 

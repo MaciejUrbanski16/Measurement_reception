@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(SRC_FILES
         main.cpp
-        RemoteDataInterpreter.cpp RemoteDataInterpreter.h PseudoServerContext.cpp PseudoServerContext.h RemoteDataHandler.cpp RemoteDataHandler.h)
+        RemoteDataInterpreter.cpp RemoteDataInterpreter.h PseudoServerContext.cpp PseudoServerContext.h RemoteDataHandler.cpp RemoteDataHandler.h VelocityCalculator.cpp VelocityCalculator.h)
 
 include_directories(
         includes
