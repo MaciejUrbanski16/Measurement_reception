@@ -56,6 +56,8 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     wxButton *button1;
     button = new wxButton(panel, 1001, _T("Connect"), wxPoint(100,10), wxDefaultSize, 0);
     wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
+
+    showingPlotType = static_cast<uint8_t>(Plot::POSITION);
 //
     xAxisForPositioning = new mpScaleX(wxT("X"), mpALIGN_BOTTOM, true, mpX_NORMAL);
     yAxisForPositioning = new mpScaleY(wxT("Y"), mpALIGN_LEFT, true);
@@ -63,7 +65,11 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     timeAxisForVelocity = new mpScaleX("t[ms]", mpALIGN_BOTTOM, true, mpX_TIME);
     velocityAxis = new mpScaleY("v[m/s]", mpALIGN_LEFT, true);
 
+    timeAxisForAcceleration = new mpScaleX("t[ms]", mpALIGN_BOTTOM, true, mpX_TIME);
+    accelerationAxis = new mpScaleY("a[m/s2]", mpALIGN_LEFT, true);
+
     wxFont graphFont(11, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+
     xAxisForPositioning->SetFont(graphFont);
     yAxisForPositioning->SetFont(graphFont);
     xAxisForPositioning->SetDrawOutsideMargins(false);
@@ -73,6 +79,11 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     velocityAxis->SetFont(graphFont);
     timeAxisForVelocity->SetDrawOutsideMargins(false);
     velocityAxis->SetDrawOutsideMargins(false);
+
+    timeAxisForAcceleration->SetFont((graphFont));
+    accelerationAxis->SetFont(graphFont);
+    timeAxisForAcceleration->SetDrawOutsideMargins(false);
+    accelerationAxis->SetDrawOutsideMargins(false);
 
     tracePlot = new mpWindow(this, -1, wxPoint(800, 10), wxSize(600, 600), wxSUNKEN_BORDER );
     tracePlot->SetMargins(30, 30, 30, 30);
@@ -153,7 +164,6 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
     }
 }
 
-
 void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     std::cout<< "On connect button" << std::endl;
     std::array<char, 100> buff{"1222 220000 3378976 446789 7 "};
@@ -165,6 +175,7 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     std::cout<<"Actual velocity:" << velocityCalculator.getActualVelocity()<<std::endl;
     refreshPanel();
 }
+
 void RemoteDataInterpreter::OnPaint(wxPaintEvent & event){
     wxPaintDC dc(this);
     dc.DrawLine(200, 200, 400, 400);
@@ -182,11 +193,13 @@ void RemoteDataInterpreter::OnExit(wxCommandEvent& event)
 {
     Close(true);
 }
+
 void RemoteDataInterpreter::OnAbout(wxCommandEvent& event)
 {
     wxMessageBox("This is a wxWidgets Hello World example",
                  "About Hello World", wxOK | wxICON_INFORMATION);
 }
+
 void RemoteDataInterpreter::OnHello(wxCommandEvent& event)
 {
     std::vector<int> path{11,22,33,44,5,6,5};
@@ -219,36 +232,74 @@ void RemoteDataInterpreter::refreshPanel() {
     yDataToPlot.push_back(static_cast<double>(dice*2));
     mpFxyVector->SetData(xDataToPlot,yDataToPlot);
 
-    mpFxyVector->SetDrawOutsideMargins(false);
-    //tracePlot->AddLayer(mpFxyVector);
-
     tracePlot->SetPos(800.0, 800.0);
-    if(not clicked)
+    switch(showingPlotType)
     {
-        tracePlot->DelLayer(timeAxisForVelocity);
-        tracePlot->DelLayer(velocityAxis);
-        tracePlot->DelLayer(mpFxyVector);
-        mpFxyVector->SetData(xDataToPlot, yDataToPlot);
-        tracePlot->AddLayer(xAxisForPositioning);
-        tracePlot->AddLayer(yAxisForPositioning);
-        tracePlot->AddLayer(mpFxyVector);
-        tracePlot->SetMPScrollbars(true);
-        tracePlot->SetName("TRACE");
-        tracePlot->Fit();
-        clicked = true;
-    } else {
-        tracePlot->DelLayer(xAxisForPositioning);
-        tracePlot->DelLayer(yAxisForPositioning);
-        tracePlot->DelLayer(mpFxyVector);
-        mpFxyVector->SetData(timeSamples, velocityMperS);
-        tracePlot->AddLayer(timeAxisForVelocity);
-        tracePlot->AddLayer(velocityAxis);
-        tracePlot->AddLayer(mpFxyVector);
-        tracePlot->SetMPScrollbars(true);
-        tracePlot->SetName("VELOCITY");
-        tracePlot->Fit();
-        clicked = false;
-        //tracePlot->~mpWindow();
+        case (int)Plot::POSITION:
+        {
+            preparePositionPlot();
+
+            showingPlotType = static_cast<uint8_t>(Plot::VELOCITY);
+            break;
+        }
+        case (int)Plot::VELOCITY:
+        {
+            prepareVelocityPlot();
+
+            showingPlotType = static_cast<uint8_t>(Plot::ACCELERATION);
+            break;
+        }
+        case (int)Plot::ACCELERATION:
+        {
+            prepareAccelerationPlot();
+
+            showingPlotType = static_cast<uint8_t>(Plot::POSITION);
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
+
     std::cout<<"Added point: "<<dice<<"   "<< dice*2 << std::endl;
+}
+
+void RemoteDataInterpreter::preparePositionPlot() {
+    tracePlot->DelLayer(timeAxisForAcceleration);
+    tracePlot->DelLayer(accelerationAxis);
+    tracePlot->DelLayer(mpFxyVector);
+    mpFxyVector->SetData(xDataToPlot, yDataToPlot);
+    tracePlot->AddLayer(xAxisForPositioning);
+    tracePlot->AddLayer(yAxisForPositioning);
+    tracePlot->AddLayer(mpFxyVector);
+    tracePlot->SetMPScrollbars(true);
+    tracePlot->SetName("TRACE");
+    tracePlot->Fit();
+}
+
+void RemoteDataInterpreter::prepareVelocityPlot() {
+    tracePlot->DelLayer(xAxisForPositioning);
+    tracePlot->DelLayer(yAxisForPositioning);
+    tracePlot->DelLayer(mpFxyVector);
+    mpFxyVector->SetData(timeSamples, velocityMperS);
+    tracePlot->AddLayer(timeAxisForVelocity);
+    tracePlot->AddLayer(velocityAxis);
+    tracePlot->AddLayer(mpFxyVector);
+    tracePlot->SetMPScrollbars(true);
+    tracePlot->SetName("VELOCITY");
+    tracePlot->Fit();
+}
+
+void RemoteDataInterpreter::prepareAccelerationPlot() {
+    tracePlot->DelLayer(timeAxisForVelocity);
+    tracePlot->DelLayer(velocityAxis);
+    tracePlot->DelLayer(mpFxyVector);
+    mpFxyVector->SetData(timeStamplesForAcceleration, accelerationMperS2);
+    tracePlot->AddLayer(timeAxisForAcceleration);
+    tracePlot->AddLayer(accelerationAxis);
+    tracePlot->AddLayer(mpFxyVector);
+    tracePlot->SetMPScrollbars(true);
+    tracePlot->SetName("ACCELERATION");
+    tracePlot->Fit();
 }

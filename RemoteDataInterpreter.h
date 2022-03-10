@@ -17,6 +17,13 @@ enum class ConnectionUtils : int {
     SERVER_ID,
 };
 
+enum class Plot : uint8_t {
+    POSITION = 200,
+    ACCELERATION,
+    VELOCITY,
+    NONE
+};
+
 
 class RemoteDataInterpreter : public wxFrame
 {
@@ -56,13 +63,14 @@ private:
     mpScaleX* timeAxisForVelocity{nullptr};
     mpScaleY* velocityAxis{nullptr};
 
+    mpScaleX* timeAxisForAcceleration{nullptr};
+    mpScaleY* accelerationAxis{nullptr};
+
    // RemotePositionDrawer remotePositionDrawer;
 
     int numClients{0};
     int numOfMsg{0};
     constexpr static uint16_t portNr{8000u};
-
-
 
     float actualAzimutDeg{0.0f};
     VelocityCalculator velocityCalculator;
@@ -70,7 +78,7 @@ private:
 
     int dice =1;
     bool clicked{false};
-
+    uint8_t showingPlotType{static_cast<uint8_t>(Plot::NONE)};
 
     std::vector<double> xDataToPlot{1.2,128.3,13.4,918.5,-234.7};
     std::vector<double> yDataToPlot{5.5,525.61,53.7,5.8,543.9};
@@ -80,6 +88,12 @@ private:
 
     std::vector<double> timeStamplesForAcceleration{0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0};
     std::vector<double> accelerationMperS2{67.6, 428.0, 190.0, 428.0, 428.0 ,456.7, 428.0, 428.0 ,428.0, 543.1};
+
+    void preparePositionPlot();
+
+    void prepareVelocityPlot();
+
+    void prepareAccelerationPlot();
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
