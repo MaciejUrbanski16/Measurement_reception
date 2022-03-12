@@ -7,6 +7,7 @@
 
 #include <wx/wx.h>
 #include "wx/socket.h"
+#include <wx/dcbuffer.h>
 #include "mathplot/mathplot.h"
 #include "VelocityCalculator.h"
 
@@ -38,6 +39,11 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnStartButton(wxCommandEvent& event);
     void OnConnectButton(wxCommandEvent& event);
+    void OnExportCsv(wxCommandEvent& event);
+    void OnStartListening(wxCommandEvent &event);
+    void OnDisconnectFromRemoteDevice(wxCommandEvent &event);
+    void OnStartDistanceMeasurement(wxCommandEvent &event);
+    void OnStopDistanceMeasurement(wxCommandEvent &event);
 
     void OnPaint(wxPaintEvent & event);
 
@@ -47,9 +53,18 @@ private:
     void initAccepting();
 
     wxMenuBar *menuBar{nullptr};
+    wxMenu *menuFile{nullptr};
+    wxMenu *menuHelp{nullptr};
+  //  wxMenuBar *menuBar{nullptr};
     wxSocketServer *sock{nullptr};
     wxPanel *panel{nullptr};
     wxPanel *panel1{nullptr};
+    wxButton *connectButton{nullptr};
+    wxButton *startDistanceMeasurementButton{nullptr};
+    wxButton *stopDistanceMeasurementButton{nullptr};
+    wxBitmap *directionIndicator{nullptr};
+    wxBufferedPaintDC *dc{nullptr};
+    wxBitmap *directionVisualisation{nullptr};
     mpWindow *actualPlot{nullptr};
     mpWindow *tracePlot{nullptr};
     mpWindow *velocityPlot{nullptr};
@@ -94,6 +109,7 @@ private:
     void prepareVelocityPlot();
 
     void prepareAccelerationPlot();
+
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H

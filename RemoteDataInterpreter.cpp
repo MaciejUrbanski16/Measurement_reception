@@ -21,44 +21,44 @@ T ProperlySeededRandomEngine () {
     return T(seeds);
 }
 
-class MySIN : public mpFX
-{
-    double m_freq, m_amp;
-public:
-    MySIN(double freq, double amp) : mpFX( wxT("f(x) = SIN(x)"), mpALIGN_LEFT) { m_freq=freq; m_amp=amp; m_drawOutsideMargins = false; }
-    virtual double GetY( double x ) { return m_amp * sin(x/6.283185/m_freq); }
-    virtual double GetMinY() { return -m_amp; }
-    virtual double GetMaxY() { return  m_amp; }
-};
-
 RemoteDataInterpreter::RemoteDataInterpreter()
-        : wxFrame(NULL, wxID_ANY, "Hello World", wxDefaultPosition, wxSize(300, 250)) {
+        : wxFrame(NULL, wxID_ANY, "Hello World", wxDefaultPosition, wxSize(1800, 1200)) {
 
     wxPoint point(30,50);
     panel = new wxPanel(this, wxID_ANY, {310, 0}, {300, 1000},0x00080000 | wxBORDER_RAISED, "PANEL" );
 
     this->Connect(wxEVT_PAINT, wxPaintEventHandler(RemoteDataInterpreter::OnPaint));
 
-    wxMenu *menuFile = new wxMenu;
+    menuFile = new wxMenu;
     menuFile->Append(1, "&Hello...\tCtrl-H",
                      "Help string shown in status bar for this menu item");
+    menuFile->Append(60, "Eksport to csv", "Eksport measured data to csv format file", false);
+    menuFile->Append(61, "Start listening", "Start listening of incoming connection from remote device", false);
+    menuFile->Append(62, "Disconnect", "Disconnect from remote device", false);
+    menuFile->AppendSeparator();
+    menuFile->Append(63, "Start distance measurement", "If distance measurement is not started start it at the moment of button click", false);
+    menuFile->Append(64, "Stop distance measurement", "If distance measurement started stop it the moment of button click", false);
     menuFile->AppendSeparator();
     menuFile->Append(wxID_EXIT);
-    wxMenu *menuHelp = new wxMenu;
+
+    menuHelp = new wxMenu;
     menuHelp->Append(wxID_ABOUT);
 
     wxImage::AddHandler(new wxPNGHandler);
 
-    panel1 = new wxPanel(this, wxID_ANY, {0, 0}, {300,1000},0x00080000 | wxBORDER_RAISED, "PANEL");
-    wxButton *button;
-    button = new wxButton(panel1, 1000, _T("Connect"), wxPoint(10,10), wxDefaultSize, 0);
+    directionVisualisation = new wxBitmap();
 
-    wxButton *button1;
-    button = new wxButton(panel, 1001, _T("Connect"), wxPoint(100,10), wxDefaultSize, 0);
-    wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
+    //directionVisualisation->Create(100, 300);
+
+
+    panel1 = new wxPanel(this, wxID_ANY, {50, 50}, {300,1000},0x00080000 | wxBORDER_RAISED, "PANEL");
+
+    connectButton = new wxButton(panel1, 1000, _T("Connect"), wxPoint(10, 10), wxDefaultSize, 0);
+    startDistanceMeasurementButton = new wxButton(panel1, 1001, "Start distance measure", wxPoint(10, 60), wxDefaultSize, 0);
+    stopDistanceMeasurementButton = new wxButton(panel1, 1002, "Stop distance measure", wxPoint(10, 110), wxDefaultSize, 0);
 
     showingPlotType = static_cast<uint8_t>(Plot::POSITION);
-//
+
     xAxisForPositioning = new mpScaleX(wxT("X"), mpALIGN_BOTTOM, true, mpX_NORMAL);
     yAxisForPositioning = new mpScaleY(wxT("Y"), mpALIGN_LEFT, true);
 
@@ -86,9 +86,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     accelerationAxis->SetDrawOutsideMargins(false);
 
     tracePlot = new mpWindow(this, -1, wxPoint(800, 10), wxSize(600, 600), wxSUNKEN_BORDER );
-    tracePlot->SetMargins(30, 30, 30, 30);
-//    tracePlot->AddLayer(xAxisForPositioning );
-//    tracePlot->AddLayer(yAxisForPositioning );
+    tracePlot->SetMargins(30, 30, 40, 60);
 
     velocityPlot = new mpWindow(this, -1, wxPoint(800, 800), wxSize(900, 600), wxSUNKEN_BORDER );
 
@@ -97,11 +95,12 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     mpFxyVector->SetContinuity(true);
     wxPen vectorpen(*wxRED, 2, wxSOLID);
     mpFxyVector->SetPen(vectorpen);
+    mpFxyVector->SetPen(vectorpen);
     mpFxyVector->SetDrawOutsideMargins(false);
     tracePlot->AddLayer(mpFxyVector);
     tracePlot->SetMPScrollbars(true);
 
-    wxMenuBar *menuBar = new wxMenuBar;
+    menuBar = new wxMenuBar();
     menuBar->Append(menuFile, "&File");
     menuBar->Append(menuHelp, "&Help");
     SetMenuBar(menuBar);
@@ -114,13 +113,46 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     establishServerListening();
 
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnHello, this, 1);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExportCsv, this, 60);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStartListening, this, 61);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnDisconnectFromRemoteDevice, this, 62);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStartDistanceMeasurement, this, 63);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStopDistanceMeasurement, this, 64);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExit, this, wxID_EXIT);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnStartButton, this, 101);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnConnectButton, this, wxID_YES);
     Bind(wxEVT_SOCKET, &RemoteDataInterpreter::OnServerEvent, this, static_cast<int>(ConnectionUtils::SERVER_ID));
     Bind(wxEVT_SOCKET, &RemoteDataInterpreter::OnSocketEvent, this, static_cast<int>(ConnectionUtils::SOCKET_ID));
-    Connect(1000, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(RemoteDataInterpreter::OnStartButton));
+    Connect(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(RemoteDataInterpreter::OnStartButton));
+    this->Connect(wxID_ANY, wxEVT_PAINT,
+                  wxPaintEventHandler(RemoteDataInterpreter::OnPaint),
+                  (wxObject*)0, this);
+}
+
+void RemoteDataInterpreter::OnExportCsv(wxCommandEvent& event)
+{
+    std::cout<<"Eksport csv"<<std::endl;
+}
+
+void RemoteDataInterpreter::OnStartDistanceMeasurement(wxCommandEvent& event)
+{
+    std::cout<<"Start distance measurement"<<std::endl;
+}
+
+void RemoteDataInterpreter::OnStopDistanceMeasurement(wxCommandEvent& event)
+{
+    std::cout<<"Stop distance measurement"<<std::endl;
+}
+
+void RemoteDataInterpreter::OnStartListening(wxCommandEvent& event)
+{
+    std::cout<<"Start listening"<<std::endl;
+}
+
+void RemoteDataInterpreter::OnDisconnectFromRemoteDevice(wxCommandEvent& event)
+{
+    std::cout<<"Disconnect remote device"<<std::endl;
 }
 
 void RemoteDataInterpreter::OnConnectButton(wxCommandEvent& event){
@@ -165,28 +197,47 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
 }
 
 void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
-    std::cout<< "On connect button" << std::endl;
-    std::array<char, 100> buff{"1222 220000 3378976 446789 7 "};
-    RemoteDataHandler remoteDataHandler(buff);
-    auto vel{remoteDataHandler.getXAcceleration()};
-    actualAzimutDeg = remoteDataHandler.getAzimut();
-    std::cout<<"Azimut: "<<actualAzimutDeg<<std::endl;
-    velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(), remoteDataHandler.getTimeIntervalMs());
-    std::cout<<"Actual velocity:" << velocityCalculator.getActualVelocity()<<std::endl;
-    refreshPanel();
+    if(event.GetEventObject() == connectButton) {
+        std::cout << "On connect connectButton" << std::endl;
+        std::array<char, 100> buff{"1222 220000 3378976 446789 7 "};
+        RemoteDataHandler remoteDataHandler(buff);
+        auto vel{remoteDataHandler.getXAcceleration()};
+        actualAzimutDeg = remoteDataHandler.getAzimut();
+        std::cout << "Azimut: " << actualAzimutDeg << std::endl;
+        velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
+                                                   remoteDataHandler.getTimeIntervalMs());
+        std::cout << "Actual velocity:" << velocityCalculator.getActualVelocity() << std::endl;
+        refreshPanel();
+    }
+    else if(event.GetEventObject() == startDistanceMeasurementButton)
+    {
+        std::cout<<"Start distance measusre"<<std::endl;
+    }
+    else if(event.GetEventObject() == stopDistanceMeasurementButton)
+    {
+        std::cout<<"Stop distance measusre"<<std::endl;
+    }
 }
 
 void RemoteDataInterpreter::OnPaint(wxPaintEvent & event){
-    wxPaintDC dc(this);
-    dc.DrawLine(200, 200, 400, 400);
-    dc.DrawText("HELLO it's only me!", 600, 100);
+    dc = new wxBufferedPaintDC(this);
+    directionIndicator = new wxBitmap();
+    bool res = directionIndicator->LoadFile("tool1.png", wxBITMAP_TYPE_PNG);
+    dc->DrawBitmap(*directionIndicator,0, 0, false);
+    std::cout<<"Result of load bitmap: " << res << std::endl;
 
-    for(int i = 0 ; i < 100; i++)
-    {
-        dc.DrawPoint(i+12,i+25);
-    }
-    dc.DrawRectangle({700,100},{300,100});
-    dc.DrawPoint(500,500);
+    wxPaintDC dc(this);
+    dc.SetTextForeground(wxColour(255, 255, 255));
+
+    dc.DrawBitmap(*directionIndicator, {30, 20}, true);
+//    dc.DrawText("HELLO it's only me!", 600, 100);
+//
+//    for(int i = 0 ; i < 100; i++)
+//    {
+//        dc.DrawPoint(i+12,i+25);
+//    }
+//    dc.DrawRectangle({700,100},{300,100});
+//    dc.DrawPoint(500,500);
 }
 
 void RemoteDataInterpreter::OnExit(wxCommandEvent& event)
@@ -258,6 +309,7 @@ void RemoteDataInterpreter::refreshPanel() {
         }
         default:
         {
+            std::cerr<<"Unavailable plot type " << showingPlotType <<  std::endl;
             break;
         }
     }
@@ -275,6 +327,8 @@ void RemoteDataInterpreter::preparePositionPlot() {
     tracePlot->AddLayer(mpFxyVector);
     tracePlot->SetMPScrollbars(true);
     tracePlot->SetName("TRACE");
+    tracePlot->SetColourTheme({40,20,10}, {45,90,25}, {0, 135,90});
+    wxColour wxColour(12,2,3);
     tracePlot->Fit();
 }
 
