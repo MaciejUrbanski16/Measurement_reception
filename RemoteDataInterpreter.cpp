@@ -24,9 +24,6 @@ T ProperlySeededRandomEngine () {
 RemoteDataInterpreter::RemoteDataInterpreter()
         : wxFrame(NULL, wxID_ANY, "Hello World", wxDefaultPosition, wxSize(1800, 1200)) {
 
-    wxPoint point(30,50);
-    panel = new wxPanel(this, wxID_ANY, {310, 0}, {300, 1000},0x00080000 | wxBORDER_RAISED, "PANEL" );
-
     this->Connect(wxEVT_PAINT, wxPaintEventHandler(RemoteDataInterpreter::OnPaint));
 
     menuFile = new wxMenu;
@@ -41,21 +38,42 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     menuFile->AppendSeparator();
     menuFile->Append(wxID_EXIT);
 
+    menuPlot = new wxMenu;
+    menuPlot->Append(65, "Change plot", "Change displayed plot to next one", false);
+    menuPlot->Append(66, "Choose plot", "Choose plot from available plots", false);
+    menuPlot->Append(67, "Fit", "Fit all plot to size of window plotting", false);
+    submenuPlotChoose = new wxMenu;
+    submenuPlotChoose->Append(68, "Position plot");
+    submenuPlotChoose->Append(69, "Acceleration plot");
+    submenuPlotChoose->Append(70, "Velocity plot");
+    menuPlot->AppendSubMenu(submenuPlotChoose, "Choose plot", "Choose plot to show");
+    menuPlot->AppendSeparator();
+    menuPlot->Append(71, "Set interval measurement", "Set time interval of measurement in the remote device", false);
+    //show window of setup??
+
+
+
     menuHelp = new wxMenu;
     menuHelp->Append(wxID_ABOUT);
+
+    menuBar = new wxMenuBar();
+    menuBar->Append(menuFile, "&File");
+    menuBar->Append(menuPlot, "&Plot");
+    menuBar->Append(menuHelp, "&Help");
+    SetMenuBar(menuBar);
+    CreateStatusBar();
+    SetStatusText("Welcome to wxWidgets!");
 
     wxImage::AddHandler(new wxPNGHandler);
 
     directionVisualisation = new wxBitmap();
 
-    //directionVisualisation->Create(100, 300);
 
+    mainControlPanel = new wxPanel(this, wxID_ANY, {0, 0}, {300, 1000}, 0x00080000 | wxBORDER_RAISED, "PANEL");
 
-    panel1 = new wxPanel(this, wxID_ANY, {50, 50}, {300,1000},0x00080000 | wxBORDER_RAISED, "PANEL");
-
-    connectButton = new wxButton(panel1, 1000, _T("Connect"), wxPoint(10, 10), wxDefaultSize, 0);
-    startDistanceMeasurementButton = new wxButton(panel1, 1001, "Start distance measure", wxPoint(10, 60), wxDefaultSize, 0);
-    stopDistanceMeasurementButton = new wxButton(panel1, 1002, "Stop distance measure", wxPoint(10, 110), wxDefaultSize, 0);
+    connectButton = new wxButton(mainControlPanel, 1000, _T("Connect"), wxPoint(10, 10), wxDefaultSize, 0);
+    startDistanceMeasurementButton = new wxButton(mainControlPanel, 1001, "Start distance measure", wxPoint(10, 60), {160, 30}, 0);
+    stopDistanceMeasurementButton = new wxButton(mainControlPanel, 1002, "Stop distance measure", wxPoint(10, 110), {160, 30}, 1);
 
     showingPlotType = static_cast<uint8_t>(Plot::POSITION);
 
@@ -100,16 +118,9 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     tracePlot->AddLayer(mpFxyVector);
     tracePlot->SetMPScrollbars(true);
 
-    menuBar = new wxMenuBar();
-    menuBar->Append(menuFile, "&File");
-    menuBar->Append(menuHelp, "&Help");
-    SetMenuBar(menuBar);
-    CreateStatusBar();
-    SetStatusText("Welcome to wxWidgets!");
-
-
     numClients = 0;
 
+    prepareVelocityPlot();
     establishServerListening();
 
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnHello, this, 1);
@@ -165,7 +176,7 @@ void RemoteDataInterpreter::OnServerEvent(wxSocketEvent& event)
     if(event.GetSocketEvent() == wxSOCKET_CONNECTION) {
         std::cout<<"Socet Connection\n";
         wxSocketBase *Sock = sock->Accept(false);
-        if (Sock == NULL) {
+        if (Sock == nullptr) {
             std::cout << "Fail to incoming connection\n";
             return;
         }
@@ -229,15 +240,7 @@ void RemoteDataInterpreter::OnPaint(wxPaintEvent & event){
     wxPaintDC dc(this);
     dc.SetTextForeground(wxColour(255, 255, 255));
 
-    dc.DrawBitmap(*directionIndicator, {30, 20}, true);
-//    dc.DrawText("HELLO it's only me!", 600, 100);
-//
-//    for(int i = 0 ; i < 100; i++)
-//    {
-//        dc.DrawPoint(i+12,i+25);
-//    }
-//    dc.DrawRectangle({700,100},{300,100});
-//    dc.DrawPoint(500,500);
+    dc.DrawBitmap(*directionIndicator, {400, 20}, true);
 }
 
 void RemoteDataInterpreter::OnExit(wxCommandEvent& event)

@@ -54,11 +54,13 @@ private:
 
     wxMenuBar *menuBar{nullptr};
     wxMenu *menuFile{nullptr};
+    wxMenu *menuPlot{nullptr};
+    wxMenu *submenuPlotChoose{nullptr};
     wxMenu *menuHelp{nullptr};
   //  wxMenuBar *menuBar{nullptr};
     wxSocketServer *sock{nullptr};
     wxPanel *panel{nullptr};
-    wxPanel *panel1{nullptr};
+    wxPanel *mainControlPanel{nullptr};
     wxButton *connectButton{nullptr};
     wxButton *startDistanceMeasurementButton{nullptr};
     wxButton *stopDistanceMeasurementButton{nullptr};
