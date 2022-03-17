@@ -8,6 +8,7 @@
 #include <wx/wx.h>
 #include "wx/socket.h"
 #include <wx/dcbuffer.h>
+#include <wx/listctrl.h>
 #include "mathplot/mathplot.h"
 #include "VelocityCalculator.h"
 
@@ -61,6 +62,8 @@ private:
     wxSocketServer *sock{nullptr};
     wxPanel *panel{nullptr};
     wxPanel *mainControlPanel{nullptr};
+    wxTextCtrl *setupTimeInterval{nullptr};
+    wxListCtrl *listOfMeasuredDistances{nullptr};
     wxButton *connectButton{nullptr};
     wxButton *startDistanceMeasurementButton{nullptr};
     wxButton *stopDistanceMeasurementButton{nullptr};
@@ -92,10 +95,11 @@ private:
     float actualAzimutDeg{0.0f};
     VelocityCalculator velocityCalculator;
 
-
     int dice =1;
-    bool clicked{false};
+    bool isStartedMeasurementDistance{false};
+    uint64_t measuredDistance{0};
     uint8_t showingPlotType{static_cast<uint8_t>(Plot::NONE)};
+    uint32_t timeMeasurementIntervalMs{100u};
 
     std::vector<double> xDataToPlot{1.2,128.3,13.4,918.5,-234.7};
     std::vector<double> yDataToPlot{5.5,525.61,53.7,5.8,543.9};
@@ -112,6 +116,13 @@ private:
 
     void prepareAccelerationPlot();
 
+    void OnSetTimeInterval(wxCommandEvent &event);
+
+    bool isNumber(const std::string &s);
+
+    void updateTimeMeasurementIntervalMs(const char *const text);
+
+    void updateMeasuredDistance(long long int velocity);
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H

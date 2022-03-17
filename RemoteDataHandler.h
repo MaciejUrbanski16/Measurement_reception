@@ -13,7 +13,8 @@ constexpr static unsigned bufferSize{100u};
 
 class RemoteDataHandler {
 public:
-    explicit RemoteDataHandler(const std::array<char, bufferSize> &buffer) : buffer(buffer)
+    explicit RemoteDataHandler(const std::array<char, bufferSize> &buffer) :
+    buffer(buffer)
     {
         calculateAzimut();
         calculateXAcceleration();

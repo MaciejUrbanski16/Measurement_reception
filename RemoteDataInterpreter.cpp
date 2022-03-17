@@ -28,7 +28,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
 
     menuFile = new wxMenu;
     menuFile->Append(1, "&Hello...\tCtrl-H",
-                     "Help string shown in status bar for this menu item");
+                     "Help string shown in status bar for this menu statisticOfMeasurement");
     menuFile->Append(60, "Eksport to csv", "Eksport measured data to csv format file", false);
     menuFile->Append(61, "Start listening", "Start listening of incoming connection from remote device", false);
     menuFile->Append(62, "Disconnect", "Disconnect from remote device", false);
@@ -48,10 +48,8 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     submenuPlotChoose->Append(70, "Velocity plot");
     menuPlot->AppendSubMenu(submenuPlotChoose, "Choose plot", "Choose plot to show");
     menuPlot->AppendSeparator();
-    menuPlot->Append(71, "Set interval measurement", "Set time interval of measurement in the remote device", false);
+    menuPlot->Append(71, "Set interval measurement", "Set time interval of measurement in the remote device ms", false);
     //show window of setup??
-
-
 
     menuHelp = new wxMenu;
     menuHelp->Append(wxID_ABOUT);
@@ -63,6 +61,37 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     SetMenuBar(menuBar);
     CreateStatusBar();
     SetStatusText("Welcome to wxWidgets!");
+
+    setupTimeInterval = new wxTextCtrl(this, wxID_ANY, "value", {300, 300}, {180, 60}, 0);
+
+    listOfMeasuredDistances = new wxListCtrl(this, 901, {400, 200}, {400, 300}, wxLC_REPORT);
+    listOfMeasuredDistances->InsertColumn(0, "Start time", wxLIST_FORMAT_LEFT);
+    listOfMeasuredDistances->InsertColumn(1, "Stop time", wxLIST_FORMAT_LEFT);
+    listOfMeasuredDistances->InsertColumn(2, "Total time", wxLIST_FORMAT_LEFT);
+    listOfMeasuredDistances->InsertColumn(3, "Distance", wxLIST_FORMAT_LEFT);
+
+    wxListItem* statisticOfMeasurement     = new wxListItem();
+
+    statisticOfMeasurement->SetBackgroundColour(*wxRED);
+    statisticOfMeasurement->SetText(wxT("Basic statistics"));
+    statisticOfMeasurement->SetId(0);
+
+    listOfMeasuredDistances->InsertItem(0, *statisticOfMeasurement);
+    listOfMeasuredDistances->InsertItem(1, *statisticOfMeasurement);
+    listOfMeasuredDistances->InsertItem(2, *statisticOfMeasurement);
+    listOfMeasuredDistances->InsertItem(3, *statisticOfMeasurement);
+
+    listOfMeasuredDistances->SetItem(0, 0, wxT("1"), -1);
+    listOfMeasuredDistances->SetItem(0, 1, wxT("1"), -1);
+    listOfMeasuredDistances->SetItem(0, 2, wxT("23"), -1);
+    listOfMeasuredDistances->SetItem(0, 3, wxT("8:34"), -1);
+    listOfMeasuredDistances->SetItem(1, 0, wxT("2"), -1);
+    listOfMeasuredDistances->SetItem(1, 1, wxT("2"), -1);
+    listOfMeasuredDistances->SetItem(2, 0, wxT("3"), -1);
+    listOfMeasuredDistances->SetItem(2, 1, wxT("3"), -1);
+    listOfMeasuredDistances->SetItem(3, 0, wxT("4"), -1);
+    listOfMeasuredDistances->SetItem(3, 1, wxT("4"), -1);
+
 
     wxImage::AddHandler(new wxPNGHandler);
 
@@ -129,6 +158,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnDisconnectFromRemoteDevice, this, 62);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStartDistanceMeasurement, this, 63);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStopDistanceMeasurement, this, 64);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnSetTimeInterval, this, 71);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExit, this, wxID_EXIT);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnStartButton, this, 101);
@@ -139,6 +169,19 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     this->Connect(wxID_ANY, wxEVT_PAINT,
                   wxPaintEventHandler(RemoteDataInterpreter::OnPaint),
                   (wxObject*)0, this);
+}
+
+void RemoteDataInterpreter::OnSetTimeInterval(wxCommandEvent& event)
+{
+    const char *const text = static_cast<const char *>(setupTimeInterval->GetValue());
+    if(not isNumber(text)) {
+        wxMessageBox("The given value is not integral. Write value of correct type, please",
+                     "About Hello World", wxOK | wxICON_ERROR);
+    }
+    else {
+        updateTimeMeasurementIntervalMs(text);
+        std::cout << timeMeasurementIntervalMs << std::endl;
+    }
 }
 
 void RemoteDataInterpreter::OnExportCsv(wxCommandEvent& event)
@@ -209,6 +252,7 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
 
 void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     if(event.GetEventObject() == connectButton) {
+        //this is implementation of first step remote data handling
         std::cout << "On connect connectButton" << std::endl;
         std::array<char, 100> buff{"1222 220000 3378976 446789 7 "};
         RemoteDataHandler remoteDataHandler(buff);
@@ -218,14 +262,32 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
         velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
                                                    remoteDataHandler.getTimeIntervalMs());
         std::cout << "Actual velocity:" << velocityCalculator.getActualVelocity() << std::endl;
+        if(isStartedMeasurementDistance){
+            updateMeasuredDistance(velocityCalculator.getActualVelocity());
+        }
         refreshPanel();
     }
     else if(event.GetEventObject() == startDistanceMeasurementButton)
     {
+        if(isStartedMeasurementDistance){
+            wxMessageBox("Function distance measurement has already been started!",
+                         "About Measurement distance", wxOK | wxICON_INFORMATION);
+        }
+        else {
+            isStartedMeasurementDistance = true;
+        }
         std::cout<<"Start distance measusre"<<std::endl;
     }
     else if(event.GetEventObject() == stopDistanceMeasurementButton)
     {
+        if(not isStartedMeasurementDistance)
+        {
+            wxMessageBox("Function distance measurement has already been stopped!",
+                         "About Measurement distance", wxOK | wxICON_INFORMATION);
+        }
+        else{
+            isStartedMeasurementDistance = false;
+        }
         std::cout<<"Stop distance measusre"<<std::endl;
     }
 }
@@ -359,4 +421,18 @@ void RemoteDataInterpreter::prepareAccelerationPlot() {
     tracePlot->SetMPScrollbars(true);
     tracePlot->SetName("ACCELERATION");
     tracePlot->Fit();
+}
+
+bool RemoteDataInterpreter::isNumber(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(),
+                                      s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
+void RemoteDataInterpreter::updateTimeMeasurementIntervalMs(const char *const text) {
+    timeMeasurementIntervalMs = atoi(text);
+}
+
+void RemoteDataInterpreter::updateMeasuredDistance(long long int velocity) {
+    measuredDistance += velocity/timeMeasurementIntervalMs;
 }
