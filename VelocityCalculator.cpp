@@ -14,5 +14,5 @@ void VelocityCalculator::calculateActualVelocity(const long long xAcc, const uin
     const float timeIntervalSec = static_cast<float>(timeIntervalMs) / 1000.0f;
     const auto actualSample{timeIntervalSec * xAcc};
     actualVelocity += actualSample;
- //   std::cout<<"Timer interval s: "<< timeIntervalSec <<"actaulSample: " <<actualSample <<std::endl;
+   std::cout<<"Timer interval s: "<< timeIntervalSec <<"actaulSample: " <<actualSample <<std::endl;
 }

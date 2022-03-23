@@ -36,6 +36,7 @@ public:
     void OnServerEvent(wxSocketEvent& event);
 private:
     void OnHello(wxCommandEvent& event);
+    void OnChangeToPositionPlot(wxCommandEvent &event);
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnStartButton(wxCommandEvent& event);
@@ -67,6 +68,7 @@ private:
     wxButton *connectButton{nullptr};
     wxButton *startDistanceMeasurementButton{nullptr};
     wxButton *stopDistanceMeasurementButton{nullptr};
+    wxListItem* statisticOfMeasurement{nullptr};
     wxBitmap *directionIndicator{nullptr};
     wxBufferedPaintDC *dc{nullptr};
     wxBitmap *directionVisualisation{nullptr};
@@ -100,6 +102,7 @@ private:
     uint64_t measuredDistance{0};
     uint8_t showingPlotType{static_cast<uint8_t>(Plot::NONE)};
     uint32_t timeMeasurementIntervalMs{100u};
+    uint32_t actualIndexInMeasurementTable{0u};
 
     std::vector<double> xDataToPlot{1.2,128.3,13.4,918.5,-234.7};
     std::vector<double> yDataToPlot{5.5,525.61,53.7,5.8,543.9};
@@ -123,6 +126,13 @@ private:
     void updateTimeMeasurementIntervalMs(const char *const text);
 
     void updateMeasuredDistance(long long int velocity);
+
+    void updateMeasurementsTable(std::string startTime, std::string stopTime, std::string totalTime, std::string distance);
+
+
+    void startDistanceMeasurement();
+
+    void stopDistanceMeasurement();
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
