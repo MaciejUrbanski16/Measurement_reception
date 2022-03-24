@@ -11,6 +11,7 @@
 #include <wx/listctrl.h>
 #include "mathplot/mathplot.h"
 #include "VelocityCalculator.h"
+#include "RelativePositionCalculator.h"
 
 class PseudoServerContext;
 
@@ -96,6 +97,7 @@ private:
 
     float actualAzimutDeg{0.0f};
     VelocityCalculator velocityCalculator;
+    RelativePositionCalculator relativePositionCalculator;
 
     int dice =1;
     bool isStartedMeasurementDistance{false};
@@ -104,8 +106,8 @@ private:
     uint32_t timeMeasurementIntervalMs{100u};
     uint32_t actualIndexInMeasurementTable{0u};
 
-    std::vector<double> xDataToPlot{1.2,128.3,13.4,918.5,-234.7};
-    std::vector<double> yDataToPlot{5.5,525.61,53.7,5.8,543.9};
+    std::vector<double> xDataToPlot{};
+    std::vector<double> yDataToPlot{};
 
     std::vector<double> timeSamples{0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0};
     std::vector<double> velocityMperS{67.6, 231.7, 190.0, 428.0, 8.0 ,456.7, 122.4, 78.9 ,22.1, 543.1};

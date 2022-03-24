@@ -267,6 +267,14 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
         velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
                                                    remoteDataHandler.getTimeIntervalMs());
         std::cout << "Actual velocity:" << velocityCalculator.getActualVelocity() << std::endl;
+
+
+        relativePositionCalculator.setPreviousRelativePosition({12.0,16.0});
+        relativePositionCalculator.calculateActualRelativePosition(velocityCalculator.getActualVelocity(),
+                                                                   remoteDataHandler.getTimeIntervalMs(),
+                                                                   remoteDataHandler.getAzimut());
+        const auto actualRelativePosition = relativePositionCalculator.getCalculatedRelativePosition();
+        std::cout<<"DEB Calculated relative position x: " << actualRelativePosition.first << " y: " << actualRelativePosition.second << std::endl;
         if(isStartedMeasurementDistance){
             updateMeasuredDistance(velocityCalculator.getActualVelocity());
         }
