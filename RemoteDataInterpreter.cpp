@@ -139,7 +139,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     tracePlot->SetMargins(30, 30, 40, 60);
 
     mpFxyVector = new mpFXYVector();
-    mpFxyVector->SetData(xDataToPlot,yDataToPlot);
+    mpFxyVector->SetData(xCoordinatesOfRelativePosition, yCoordinatesOfRelativePosition);
     mpFxyVector->SetContinuity(true);
     wxPen vectorpen(*wxRED, 2, wxSOLID);
     mpFxyVector->SetPen(vectorpen);
@@ -259,22 +259,19 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     if(event.GetEventObject() == connectButton) {
         //this is implementation of first step remote data handling
         std::cout << "On connect connectButton" << std::endl;
-        std::array<char, 100> buff{"1222 220000 3378976 446789 7 "};
+        std::array<char, 100> buff{"1800 220 33 89 7 "};
         RemoteDataHandler remoteDataHandler(buff);
-        auto vel{remoteDataHandler.getXAcceleration()};
         actualAzimutDeg = remoteDataHandler.getAzimut();
-        std::cout << "Azimut: " << actualAzimutDeg << std::endl;
+        updateDataToPlotAcceleration(remoteDataHandler);
         velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
                                                    remoteDataHandler.getTimeIntervalMs());
-        std::cout << "Actual velocity:" << velocityCalculator.getActualVelocity() << std::endl;
+        updateDataToPlotVelocity(remoteDataHandler);
 
-
-        relativePositionCalculator.setPreviousRelativePosition({12.0,16.0});
+        relativePositionCalculator.setPreviousRelativePosition({0.0,16.0});
         relativePositionCalculator.calculateActualRelativePosition(velocityCalculator.getActualVelocity(),
                                                                    remoteDataHandler.getTimeIntervalMs(),
                                                                    remoteDataHandler.getAzimut());
-        const auto actualRelativePosition = relativePositionCalculator.getCalculatedRelativePosition();
-        std::cout<<"DEB Calculated relative position x: " << actualRelativePosition.first << " y: " << actualRelativePosition.second << std::endl;
+        updateDataToPlotRelativePosition(remoteDataHandler);
         if(isStartedMeasurementDistance){
             updateMeasuredDistance(velocityCalculator.getActualVelocity());
         }
@@ -346,12 +343,7 @@ void RemoteDataInterpreter::establishServerListening() {
 }
 
 void RemoteDataInterpreter::refreshPanel() {
-    //it is only to see gain
-    this->dice*=2;
-    xDataToPlot.push_back(static_cast<double>(dice));
-    yDataToPlot.push_back(static_cast<double>(dice*2));
-    mpFxyVector->SetData(xDataToPlot,yDataToPlot);
-
+    mpFxyVector->SetData(xCoordinatesOfRelativePosition, yCoordinatesOfRelativePosition);
     tracePlot->SetPos(800.0, 800.0);
     switch(showingPlotType)
     {
@@ -382,15 +374,13 @@ void RemoteDataInterpreter::refreshPanel() {
             break;
         }
     }
-
-    std::cout<<"Added point: "<<dice<<"   "<< dice*2 << std::endl;
 }
 
 void RemoteDataInterpreter::preparePositionPlot() {
     tracePlot->DelLayer(timeAxisForAcceleration);
     tracePlot->DelLayer(accelerationAxis);
     tracePlot->DelLayer(mpFxyVector);
-    mpFxyVector->SetData(xDataToPlot, yDataToPlot);
+    mpFxyVector->SetData(xCoordinatesOfRelativePosition, yCoordinatesOfRelativePosition);
     tracePlot->AddLayer(xAxisForPositioning);
     tracePlot->AddLayer(yAxisForPositioning);
     tracePlot->AddLayer(mpFxyVector);
@@ -418,7 +408,7 @@ void RemoteDataInterpreter::prepareAccelerationPlot() {
     tracePlot->DelLayer(timeAxisForVelocity);
     tracePlot->DelLayer(velocityAxis);
     tracePlot->DelLayer(mpFxyVector);
-    mpFxyVector->SetData(timeStamplesForAcceleration, accelerationMperS2);
+    mpFxyVector->SetData(timeSamples, accelerationMperS2);
     tracePlot->AddLayer(timeAxisForAcceleration);
     tracePlot->AddLayer(accelerationAxis);
     tracePlot->AddLayer(mpFxyVector);
@@ -482,4 +472,27 @@ void RemoteDataInterpreter::stopDistanceMeasurement() {
 
 }
 
+void RemoteDataInterpreter::updateDataToPlotAcceleration(const RemoteDataHandler &remoteDataHandler) {
+    if(timeSamples.empty()){
+        const auto actualTime{remoteDataHandler.getTimeIntervalMs()};
+        timeSamples.push_back(actualTime);
+    }
+    else{
+        const auto actualTime{timeSamples.back() + remoteDataHandler.getTimeIntervalMs()};
+        timeSamples.push_back(actualTime);
+    }
+    accelerationMperS2.push_back(remoteDataHandler.getXAcceleration());
+}
 
+void RemoteDataInterpreter::updateDataToPlotVelocity(const RemoteDataHandler &remoteDataHandler) {
+    velocityMperS.push_back(velocityCalculator.getActualVelocity());
+    std::cout << "Actual velocity:" << velocityCalculator.getActualVelocity() << std::endl;
+}
+
+void RemoteDataInterpreter::updateDataToPlotRelativePosition(const RemoteDataHandler &handler) {
+    const auto actualRelativePosition = relativePositionCalculator.getCalculatedRelativePosition();
+    xCoordinatesOfRelativePosition.push_back(actualRelativePosition.first);
+    yCoordinatesOfRelativePosition.push_back(actualRelativePosition.second);
+    std::cout<< "DEB Calculated relative position x: " << actualRelativePosition.first
+             << " y: " << actualRelativePosition.second << "Azimut: " << handler.getAzimut() << std::endl;
+}

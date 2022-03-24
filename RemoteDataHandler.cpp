@@ -42,10 +42,10 @@ void RemoteDataHandler::calculateAzimut() {
             std::cout << "azimut " << azimutAsString << "A" << azimut << std::endl;
         }
         else{
-            std::cout<<"INCOMING AZIMUT: " << azimutIntegral <<" NOT VALID" << std::endl;
+            std::cerr<<"INCOMING AZIMUT: " << azimutIntegral <<" NOT VALID" << std::endl;
         }
     } else{
-        std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
+        std::cerr<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
 }
 
@@ -61,7 +61,7 @@ void RemoteDataHandler::calculateXAcceleration() {
         xAcceleration = atoi(xAccelerationAsString.c_str());
         std::cout << "xAcc " << xAccelerationAsString << "A" << xAcceleration << std::endl;
     } else{
-        std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
+        std::cerr<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
 }
 
@@ -77,7 +77,7 @@ void RemoteDataHandler::calculateYAcceleration() {
         yAcceleration = atoi(yAccelerationAsString.c_str());
         std::cout << "yAcc " << yAccelerationAsString << "A" << yAcceleration << std::endl;
     } else{
-        std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
+        std::cerr<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
 }
 
@@ -93,7 +93,7 @@ void RemoteDataHandler::calculateZAcceleration() {
         zAcceleration = atoi(zAccelerationAsString.c_str());
         std::cout << "zAcc " << zAccelerationAsString << "A" << zAcceleration << std::endl;
     } else{
-        std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
+        std::cerr<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
 }
 
@@ -107,12 +107,11 @@ void RemoteDataHandler::calculateTimeIntervalMs() {
             timeIntervalAsString += buffer.at(i);
         }
         timeIntervalMs = atoi(timeIntervalAsString.c_str());
-        std::cout << "timeinterval" << timeIntervalAsString << "A" << timeIntervalMs << std::endl;
     } else{
-        std::cout<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
+        std::cerr<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }
 }
 
 bool RemoteDataHandler::isAzimutValid(int incomingAzimut) {
-    return incomingAzimut >= -1800 && incomingAzimut <= 1800;
+    return incomingAzimut >= 0 && incomingAzimut <= 3600;
 }

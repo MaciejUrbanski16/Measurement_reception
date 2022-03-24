@@ -14,6 +14,7 @@
 #include "RelativePositionCalculator.h"
 
 class PseudoServerContext;
+class RemoteDataHandler;
 
 enum class ConnectionUtils : int {
     SOCKET_ID = 101,
@@ -106,14 +107,14 @@ private:
     uint32_t timeMeasurementIntervalMs{100u};
     uint32_t actualIndexInMeasurementTable{0u};
 
-    std::vector<double> xDataToPlot{};
-    std::vector<double> yDataToPlot{};
+    std::vector<double> xCoordinatesOfRelativePosition{};
+    std::vector<double> yCoordinatesOfRelativePosition{};
 
-    std::vector<double> timeSamples{0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0};
-    std::vector<double> velocityMperS{67.6, 231.7, 190.0, 428.0, 8.0 ,456.7, 122.4, 78.9 ,22.1, 543.1};
+    std::vector<double> timeSamples{};
+    std::vector<double> velocityMperS{};
 
-    std::vector<double> timeStamplesForAcceleration{0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0};
-    std::vector<double> accelerationMperS2{67.6, 428.0, 190.0, 428.0, 428.0 ,456.7, 428.0, 428.0 ,428.0, 543.1};
+    std::vector<double> timeSamplesForAcceleration{};
+    std::vector<double> accelerationMperS2{};
 
     void preparePositionPlot();
 
@@ -135,6 +136,12 @@ private:
     void startDistanceMeasurement();
 
     void stopDistanceMeasurement();
+
+    void updateDataToPlotVelocity(const RemoteDataHandler &handler);
+
+    void updateDataToPlotRelativePosition(const RemoteDataHandler &handler);
+
+    void updateDataToPlotAcceleration(const RemoteDataHandler &handler);
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
