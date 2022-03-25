@@ -259,7 +259,7 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     if(event.GetEventObject() == connectButton) {
         //this is implementation of first step remote data handling
         std::cout << "On connect connectButton" << std::endl;
-        std::array<char, 100> buff{"1800 220 33 89 7 "};
+        std::array<char, 100> buff{"3590 718 33 89 7 "};
         RemoteDataHandler remoteDataHandler(buff);
         actualAzimutDeg = remoteDataHandler.getAzimut();
         updateDataToPlotAcceleration(remoteDataHandler);
@@ -267,7 +267,7 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
                                                    remoteDataHandler.getTimeIntervalMs());
         updateDataToPlotVelocity(remoteDataHandler);
 
-        relativePositionCalculator.setPreviousRelativePosition({0.0,16.0});
+        relativePositionCalculator.setPreviousRelativePosition({0.0,0.0});
         relativePositionCalculator.calculateActualRelativePosition(velocityCalculator.getActualVelocity(),
                                                                    remoteDataHandler.getTimeIntervalMs(),
                                                                    remoteDataHandler.getAzimut());
@@ -405,9 +405,7 @@ void RemoteDataInterpreter::prepareVelocityPlot() {
 }
 
 void RemoteDataInterpreter::prepareAccelerationPlot() {
-    tracePlot->DelLayer(timeAxisForVelocity);
-    tracePlot->DelLayer(velocityAxis);
-    tracePlot->DelLayer(mpFxyVector);
+    tracePlot->DelAllLayers(false);
     mpFxyVector->SetData(timeSamples, accelerationMperS2);
     tracePlot->AddLayer(timeAxisForAcceleration);
     tracePlot->AddLayer(accelerationAxis);

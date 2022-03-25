@@ -36,7 +36,10 @@ private:
 
     void setNewCalculatedRelativePosition(const std::optional<std::pair<double, double>> relativePosition);
 
-    QuadraticEquationCoefficients calculateEquationCoefficients(const double radius, const float degree);
+    std::optional<QuadraticEquationCoefficients> calculateEquationCoefficients(const double radius, const float degree);
+
+    std::optional<double> calculateAcoefficient(const float degree);
+    double invalidAzimutDegree{65535.0};
 };
 
 

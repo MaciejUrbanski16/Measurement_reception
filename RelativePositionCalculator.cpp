@@ -6,14 +6,28 @@ void RelativePositionCalculator::calculateActualRelativePosition(const uint64_t 
                                                                  const float azimutDegree) {
     //y = tg(alpha) * x
     //x^2 + y^2 = r^2
+    //x^2 + tg^2(alpha) * x - r^2 = 0
+    //a=1   b=tg^2(alpha)     c=r^2
     calculatedRelativePosition.first = previousRelativePosition.first;
     calculatedRelativePosition.second = previousRelativePosition.second;
     const uint64_t lengthOfRoadFromLastMeasurementTimeInterval = velocity * timeIntervalMs;
-    const auto radius = pow(lengthOfRoadFromLastMeasurementTimeInterval,2);
-    QuadraticEquationCoefficients quadraticEquationCoefficients = calculateEquationCoefficients(radius, azimutDegree);
-    std::optional<std::pair<double, double>> relativePositionToReceivedPosition =
-            calculateRelativePositionToActualPosition(quadraticEquationCoefficients, azimutDegree);
-    setNewCalculatedRelativePosition(relativePositionToReceivedPosition);
+    const auto radius = pow(lengthOfRoadFromLastMeasurementTimeInterval, 2);
+    std::cout<<"DEB before calculation(x: " << calculatedRelativePosition.first <<
+                "y: " << calculatedRelativePosition.second << ") lengthOfRoad: " << lengthOfRoadFromLastMeasurementTimeInterval
+                << " radius: " << radius << "velocity: " << velocity << "timeInterval: " << timeIntervalMs << std::endl;
+    std::optional<QuadraticEquationCoefficients> quadraticEquationCoefficients = calculateEquationCoefficients(radius,
+                                                                                                               azimutDegree);
+    if (quadraticEquationCoefficients) {
+        std::optional<std::pair<double, double>> relativePositionToReceivedPosition =
+                calculateRelativePositionToActualPosition(quadraticEquationCoefficients.value(), azimutDegree);
+        setNewCalculatedRelativePosition(relativePositionToReceivedPosition);
+        std::cout<< "DEB after calculation (x: "<< calculatedRelativePosition.first << " y: " <<
+                calculatedRelativePosition.second << ") equation coefficiets: (a: " <<
+                quadraticEquationCoefficients.value().a << " b: " << quadraticEquationCoefficients.value().b
+                << " c: " <<quadraticEquationCoefficients.value().c << " x1: " << quadraticEquationCoefficients.value().x1
+                << " x2: " << quadraticEquationCoefficients.value().x2 << " y1: " << quadraticEquationCoefficients.value().y1
+                << " y2: " << quadraticEquationCoefficients.value().y2;
+    }
 }
 
 std::pair<double, double> RelativePositionCalculator::getCalculatedRelativePosition() const {
@@ -24,11 +38,18 @@ void RelativePositionCalculator::setPreviousRelativePosition(std::pair<double, d
     this->previousRelativePosition = previousRelativePosition;
 }
 
-QuadraticEquationCoefficients
+std::optional<QuadraticEquationCoefficients>
 RelativePositionCalculator::calculateEquationCoefficients(const double radius, const float azimutDegree) {
-    const double a = std::tan(azimutDegree);
-    QuadraticEquationCoefficients quadraticEquationCoefficients{1.0, a, radius*(-1.0)};
+    const std::optional<double> aCoefficient = calculateAcoefficient(azimutDegree);
+    const double bCoefficient = 0.0;// calculateAcoefficient(azimutDegree);
+            //std::tan(azimutDegree)
+    if(aCoefficient == std::nullopt){
+        return QuadraticEquationCoefficients{};
+    }
+    QuadraticEquationCoefficients quadraticEquationCoefficients{aCoefficient.value(), bCoefficient, radius*(-1.0)};
     const double delta = pow(quadraticEquationCoefficients.b, 2) - 4 * quadraticEquationCoefficients.a * quadraticEquationCoefficients.c;
+    std::cout<<"DEB delta: " << delta << "b: " << quadraticEquationCoefficients.b << "4*a*c: " <<4 * static_cast<int>(quadraticEquationCoefficients.a) *
+            static_cast<int>(quadraticEquationCoefficients.c) << std::endl;
     quadraticEquationCoefficients.x1 = (-quadraticEquationCoefficients.b - sqrt(delta)) / (2 * quadraticEquationCoefficients.a);
     quadraticEquationCoefficients.x2 = (-quadraticEquationCoefficients.b + sqrt(delta)) / (2 * quadraticEquationCoefficients.a);
     quadraticEquationCoefficients.y1 = quadraticEquationCoefficients.b * quadraticEquationCoefficients.x1;
@@ -83,4 +104,26 @@ void RelativePositionCalculator::setNewCalculatedRelativePosition(
     } else{
         std::cerr <<"Calculation of new relative position is not successful! nullopt returned" << std::endl;
     }
+}
+
+std::optional<double> RelativePositionCalculator::calculateAcoefficient(const float degree) {
+   if((degree >= 0.0 and degree < 90.0) or (degree >= 180.0 and degree < 270.0)){
+       // I or III
+       std::cout<<"1 or 3 Degree: " << degree << "a=tg alpha: "<< 90.0 - degree<< "      " << std::tan(((90.0 - degree) * (M_PI / 180.0))) << std::endl;
+       return pow(std::tan(((90.0 - degree) * (M_PI / 180.0))), 2) + 1.0;
+   }
+   else if(degree >= 90.0 and degree < 180.0){
+       // IV
+       std::cout<<"4 Degree: " << degree<< "a=tg alpha: "<<( - (degree - 90.0))  <<"         " << std::tan( - (degree - 90.0)* (M_PI / 180.0)) << std::endl;
+       return pow(std::tan(( - (degree - 90.0)) * (M_PI / 180.0)), 2) + 1.0;
+   }
+   else if(degree >= 270.0 and degree < 360.0){
+       // II
+       std::cout<<"2 Degree: " << degree<< "a=tg alpha: " <<180.0 + 90.0 - (360.0 - degree) <<"          " << std::tan(- (180.0 + 90.0 - (360.0 - degree)) * (M_PI / 180.0)) << std::endl;
+       return pow(std::tan(- (270.0 - (360.0 - degree)) * (M_PI / 180.0)), 2) + 1.0;
+   }
+   else{
+       std::cerr << "Invalid azimut" << degree <<" during calculation of a coefficient -> return nullopt" << std::endl;
+       return std::nullopt;
+   }
 }
