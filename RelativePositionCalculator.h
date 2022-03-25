@@ -38,7 +38,7 @@ private:
 
     std::optional<QuadraticEquationCoefficients> calculateEquationCoefficients(const double radius, const float degree);
 
-    std::optional<double> calculateAcoefficient(const float degree);
+    std::optional<std::pair<double, double>> calculateAcoefficient(const float degree);
     double invalidAzimutDegree{65535.0};
 };
 

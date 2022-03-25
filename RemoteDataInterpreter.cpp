@@ -259,7 +259,8 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     if(event.GetEventObject() == connectButton) {
         //this is implementation of first step remote data handling
         std::cout << "On connect connectButton" << std::endl;
-        std::array<char, 100> buff{"3590 718 33 89 7 "};
+        //                          azimut / xAcc / yAcc / zAcc / timeIntervalMs
+        std::array<char, 100> buff{"156 718 33 89 7 "};
         RemoteDataHandler remoteDataHandler(buff);
         actualAzimutDeg = remoteDataHandler.getAzimut();
         updateDataToPlotAcceleration(remoteDataHandler);

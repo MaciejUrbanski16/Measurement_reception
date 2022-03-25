@@ -40,20 +40,20 @@ void RelativePositionCalculator::setPreviousRelativePosition(std::pair<double, d
 
 std::optional<QuadraticEquationCoefficients>
 RelativePositionCalculator::calculateEquationCoefficients(const double radius, const float azimutDegree) {
-    const std::optional<double> aCoefficient = calculateAcoefficient(azimutDegree);
+    const std::optional<std::pair<double, double>> aCoefficient = calculateAcoefficient(azimutDegree);
     const double bCoefficient = 0.0;// calculateAcoefficient(azimutDegree);
             //std::tan(azimutDegree)
     if(aCoefficient == std::nullopt){
         return QuadraticEquationCoefficients{};
     }
-    QuadraticEquationCoefficients quadraticEquationCoefficients{aCoefficient.value(), bCoefficient, radius*(-1.0)};
+    QuadraticEquationCoefficients quadraticEquationCoefficients{aCoefficient.value().second, bCoefficient, radius*(-1.0)};
     const double delta = pow(quadraticEquationCoefficients.b, 2) - 4 * quadraticEquationCoefficients.a * quadraticEquationCoefficients.c;
     std::cout<<"DEB delta: " << delta << "b: " << quadraticEquationCoefficients.b << "4*a*c: " <<4 * static_cast<int>(quadraticEquationCoefficients.a) *
             static_cast<int>(quadraticEquationCoefficients.c) << std::endl;
     quadraticEquationCoefficients.x1 = (-quadraticEquationCoefficients.b - sqrt(delta)) / (2 * quadraticEquationCoefficients.a);
     quadraticEquationCoefficients.x2 = (-quadraticEquationCoefficients.b + sqrt(delta)) / (2 * quadraticEquationCoefficients.a);
-    quadraticEquationCoefficients.y1 = quadraticEquationCoefficients.b * quadraticEquationCoefficients.x1;
-    quadraticEquationCoefficients.y2 = quadraticEquationCoefficients.b * quadraticEquationCoefficients.x2;
+    quadraticEquationCoefficients.y1 = (aCoefficient.value().first) * quadraticEquationCoefficients.x1;
+    quadraticEquationCoefficients.y2 = (aCoefficient.value().first) * quadraticEquationCoefficients.x2;
     return quadraticEquationCoefficients;
 }
 
@@ -62,30 +62,30 @@ RelativePositionCalculator::calculateRelativePositionToActualPosition(const Quad
                                                                       const float azimut) {
     std::pair<double, double> relativePosition{0.0, 0.0};
    if(azimut > 0.0 && azimut <= 90.0){
-       coefficients.x1 > 0.0 ? relativePosition.first = coefficients.x1 :
+       coefficients.x1 >= 0.0 ? relativePosition.first = coefficients.x1 :
                                relativePosition.first = coefficients.x2;
-       coefficients.y1 > 0.0 ? relativePosition.second = coefficients.y1 :
+       coefficients.y1 >= 0.0 ? relativePosition.second = coefficients.y1 :
                                relativePosition.second = coefficients.y2;
        return std::optional<std::pair<double, double>>(relativePosition);
    }
    else if(azimut > 90.0 && azimut <= 180.0){
-       coefficients.x1 > 0.0 ? relativePosition.first = coefficients.x1 :
+       coefficients.x1 >= 0.0 ? relativePosition.first = coefficients.x1 :
                                relativePosition.first = coefficients.x2;
-       coefficients.y1 < 0.0 ? relativePosition.second = coefficients.y1 :
+       coefficients.y1 <= 0.0 ? relativePosition.second = coefficients.y1 :
                                relativePosition.second = coefficients.y2;
        return std::optional<std::pair<double, double>>(relativePosition);
    }
    else if(azimut > 180.0 && azimut <= 270.0){
-       coefficients.x1 < 0.0 ? relativePosition.first = coefficients.x1 :
+       coefficients.x1 <= 0.0 ? relativePosition.first = coefficients.x1 :
                                relativePosition.first = coefficients.x2;
-       coefficients.y1 < 0.0 ? relativePosition.second = coefficients.y1 :
+       coefficients.y1 <= 0.0 ? relativePosition.second = coefficients.y1 :
                                relativePosition.second = coefficients.y2;
        return std::optional<std::pair<double, double>>(relativePosition);
    }
    else if(azimut > 270.0 && azimut <= 360.0){
-       coefficients.x1 < 0.0 ? relativePosition.first = coefficients.x1 :
+       coefficients.x1 <= 0.0 ? relativePosition.first = coefficients.x1 :
                                relativePosition.first = coefficients.x2;
-       coefficients.y1 > 0.0 ? relativePosition.second = coefficients.y1 :
+       coefficients.y1 >= 0.0 ? relativePosition.second = coefficients.y1 :
                                relativePosition.second = coefficients.y2;
        return std::optional<std::pair<double, double>>(relativePosition);
    }
@@ -106,21 +106,27 @@ void RelativePositionCalculator::setNewCalculatedRelativePosition(
     }
 }
 
-std::optional<double> RelativePositionCalculator::calculateAcoefficient(const float degree) {
+std::optional<std::pair<double, double>> RelativePositionCalculator::calculateAcoefficient(const float degree) {
    if((degree >= 0.0 and degree < 90.0) or (degree >= 180.0 and degree < 270.0)){
        // I or III
        std::cout<<"1 or 3 Degree: " << degree << "a=tg alpha: "<< 90.0 - degree<< "      " << std::tan(((90.0 - degree) * (M_PI / 180.0))) << std::endl;
-       return pow(std::tan(((90.0 - degree) * (M_PI / 180.0))), 2) + 1.0;
+       const double tangensAlfaAsSlopeOfLine = std::tan(((90.0 - degree) * (M_PI / 180.0)));
+       const double aCoefficient = pow(std::tan(((90.0 - degree) * (M_PI / 180.0))), 2) + 1.0;
+       return std::make_pair(tangensAlfaAsSlopeOfLine, aCoefficient);
    }
    else if(degree >= 90.0 and degree < 180.0){
        // IV
        std::cout<<"4 Degree: " << degree<< "a=tg alpha: "<<( - (degree - 90.0))  <<"         " << std::tan( - (degree - 90.0)* (M_PI / 180.0)) << std::endl;
-       return pow(std::tan(( - (degree - 90.0)) * (M_PI / 180.0)), 2) + 1.0;
+       const double tangensAlfaAsSlopeOfLine = std::tan(( - (degree - 90.0)) * (M_PI / 180.0));
+       const double aCoefficient = pow(std::tan(( - (degree - 90.0)) * (M_PI / 180.0)), 2) + 1.0;
+       return std::make_pair(tangensAlfaAsSlopeOfLine, aCoefficient);
    }
    else if(degree >= 270.0 and degree < 360.0){
        // II
        std::cout<<"2 Degree: " << degree<< "a=tg alpha: " <<180.0 + 90.0 - (360.0 - degree) <<"          " << std::tan(- (180.0 + 90.0 - (360.0 - degree)) * (M_PI / 180.0)) << std::endl;
-       return pow(std::tan(- (270.0 - (360.0 - degree)) * (M_PI / 180.0)), 2) + 1.0;
+       const double tangensAlfaAsSlopeOfLine = std::tan(- (270.0 - (360.0 - degree)) * (M_PI / 180.0));
+       const double aCoefficient = pow(std::tan(- (270.0 - (360.0 - degree)) * (M_PI / 180.0)), 2) + 1.0;
+       return std::make_pair(tangensAlfaAsSlopeOfLine, aCoefficient);
    }
    else{
        std::cerr << "Invalid azimut" << degree <<" during calculation of a coefficient -> return nullopt" << std::endl;
