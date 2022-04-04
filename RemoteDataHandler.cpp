@@ -4,6 +4,7 @@
 
 #include <string>
 #include <iostream>
+#include <regex>
 #include "RemoteDataHandler.h"
 
 float RemoteDataHandler::getAzimut() const {
@@ -114,4 +115,42 @@ void RemoteDataHandler::calculateTimeIntervalMs() {
 
 bool RemoteDataHandler::isAzimutValid(int incomingAzimut) {
     return incomingAzimut >= 0 && incomingAzimut <= 3600;
+}
+
+////////////////////////////////////
+
+void RemoteDataHandler::extractDataFromJson() {
+
+    std::cout<<loadedDataAsJson<<std::endl;
+    std::regex fieldSearchingRegex("\\b[f][i][A-Za-z0-9\":\"]{2,19}\\b");
+    std::regex fieldNrSearchingRegex("[1-4][\"]+");
+    std::regex fieldValueSearchingRegex("\\b[0-9]{1,9}\\b");
+    auto words_begin =
+            std::sregex_iterator(loadedDataAsJson.begin(), loadedDataAsJson.end(), fieldSearchingRegex);
+    auto words_end = std::sregex_iterator();
+
+    std::cout << "Found "
+              << std::distance(words_begin, words_end)
+              << " words\n";
+
+    for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+        std::smatch match = *i;
+        std::string match_str = match.str();
+        auto fieldNrBegin = std::sregex_iterator(match_str.begin(), match_str.end(), fieldNrSearchingRegex);
+        auto fieldNrEnd = std::sregex_iterator();
+        std::cout << "  " << match_str << "         ";
+        for (std::sregex_iterator j = fieldNrBegin; j != fieldNrEnd; ++j) {
+            std::smatch value = *j;
+            std::string valueStr = value.str();
+            std::cout<<"   " << valueStr;
+        }
+        auto valueBegin = std::sregex_iterator(match_str.begin(), match_str.end(), fieldValueSearchingRegex);
+        auto valueEnd = std::sregex_iterator();
+        for (std::sregex_iterator j = valueBegin; j != valueEnd; ++j) {
+            std::smatch value = *j;
+            std::string valueStr = value.str();
+            std::cout<<"   " << valueStr;
+        }
+        std::cout<<std::endl;
+    }
 }

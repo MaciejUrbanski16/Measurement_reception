@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstdint>
+#include <utility>
 
 constexpr static unsigned bufferSize{100u};
 
@@ -23,14 +24,28 @@ public:
         calculateTimeIntervalMs();
     }
 
+    void extractDataFromJson();
+
+    RemoteDataHandler(std::string  loadedDataAsJson) :
+    loadedDataAsJson(std::move(loadedDataAsJson)){
+        extractDataFromJson();
+    }
+
     float getAzimut() const;
     int32_t getXAcceleration() const;
     int32_t getYAcceleration() const;
     int32_t getZAcceleration() const;
     int32_t getTimeIntervalMs() const;
 
+    //this need some refactor
+    float getAzimutWebServer() const;
+    int32_t getXAccelerationWebServer() const;
+    int32_t getYAccelerationWebServer() const;
+    int32_t getZAccelerationWebServer() const;
+
 private:
     std::array<char, bufferSize> buffer{};
+    std::string loadedDataAsJson;
 
     void calculateAzimut();
     void calculateXAcceleration();
@@ -45,6 +60,10 @@ private:
     int32_t timeIntervalMs{};
     uint32_t actualIndexProcessing;
 
+    float azimutWebServer{};
+    int32_t xAccelerationWebServer{};
+    int32_t yAccelerationWebServer{};
+    int32_t zAccelerationWebServer{};
     bool isAzimutValid(int incomingAzimut);
 };
 

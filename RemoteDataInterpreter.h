@@ -80,6 +80,7 @@ private:
     mpWindow *accelerationPlot{nullptr};
     mpInfoCoords *nfo{nullptr};
     mpFXYVector *mpFxyVector{nullptr};
+    wxTimer   *m_timer;
 
     mpScaleX* xAxisForPositioning{nullptr};
     mpScaleY* yAxisForPositioning{nullptr};
@@ -142,6 +143,14 @@ private:
     void updateDataToPlotRelativePosition(const RemoteDataHandler &handler);
 
     void updateDataToPlotAcceleration(const RemoteDataHandler &handler);
+
+    void readThingSpeakServer();
+
+    void regexExperiments(std::string &inputStr);
+
+    void regexExperiments(wxString &inputStr);
+
+    void OnTimer(wxTimerEvent &event);
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
