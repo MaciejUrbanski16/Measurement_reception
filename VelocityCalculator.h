@@ -14,6 +14,7 @@ public:
     long long getActualVelocity() const;
 private:
     long long actualVelocity{0};
+    long long int previousxAcc{0};
 };
 
 

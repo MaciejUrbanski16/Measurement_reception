@@ -171,7 +171,11 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExit, this, wxID_EXIT);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnStartButton, this, 101);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnConnectButton, this, wxID_YES);
-    Bind(wxEVT_SOCKET, &RemoteDataInterpreter::OnServerEvent, this, static_cast<int>(ConnectionUtils::SERVER_ID));
+
+    Bind(wxEVT_SOCKET, &RemoteDataInterpreter::OnServerEvent,
+            this, static_cast<int>(ConnectionUtils::SERVER_ID));
+
+
     Bind(wxEVT_SOCKET, &RemoteDataInterpreter::OnSocketEvent, this, static_cast<int>(ConnectionUtils::SOCKET_ID));
     Bind(wxEVT_TIMER, &RemoteDataInterpreter::OnTimer, this, 150);
     Connect(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(RemoteDataInterpreter::OnStartButton));
@@ -243,16 +247,14 @@ void RemoteDataInterpreter::OnServerEvent(wxSocketEvent& event)
 
 void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
 {
-
     std::cout<<"On socket\n";
     std::array<char, 100> buf{};
-    std::string in{};
-    char buffer[25];
     numOfMsg++;
     if(event.GetSocketEvent() == wxSOCKET_INPUT) {
         std::cout<<"On socket input\n";
         wxSocketBase *Sock = event.GetSocket();
         Sock->Read(buf.data(), buf.max_size());
+
         RemoteDataHandler remoteDataHandler(buf);
 
         for (int i = 0; i < 25; i++) {
@@ -336,30 +338,33 @@ void RemoteDataInterpreter::OnChangeToPositionPlot(wxCommandEvent& event) {
 
 void RemoteDataInterpreter::OnTimer(wxTimerEvent& event)
 {
-    auto start = std::chrono::steady_clock::now();
-    wxHTTP get;
-    get.SetHeader(_T("Content-type"), _T("text/html; charset=utf-8"));
-    get.SetTimeout(10); // 10 seconds of timeout instead of 10 minutes ...
-    while (!get.Connect(_T("www.thingspeak.com")))  // only the server, no pages here yet ...
-        wxSleep(5);
-
-    wxInputStream *httpStream = get.GetInputStream(_T("https://api.thingspeak.com/channels/1691975/fields/2.json?api_key=3M463IMJL16XWVIK&results=2"));
-    if (get.GetError() == wxPROTO_NOERR)
-    {
-        wxString res;
-        wxStringOutputStream out_stream(&res);
-        httpStream->Read(out_stream);
-        std::string rawMeasurementsInJson = std::string(res.mb_str());
-        RemoteDataHandler remoteDataHandler(rawMeasurementsInJson);
-        //wxMessageBox(res);
-        // wxLogVerbose( wxString(_T(" returned document length: ")) << res.Length() );
-        auto end = std::chrono::steady_clock::now();
-
-        std::cout<<"Connection to server and read data duration: " <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() <<"ms\n";
-        regexExperiments(res);
-    } else{
-        std::cerr << "Reading data from webserver unsuccessful" <<std::endl;
-    }
+//    auto start = std::chrono::steady_clock::now();
+//    wxHTTP get;
+//    get.SetHeader(_T("Content-type"), _T("text/html; charset=utf-8"));
+//    get.SetTimeout(10); // 10 seconds of timeout instead of 10 minutes ...
+//    while (!get.Connect(_T("www.thingspeak.com")))  // only the server, no pages here yet ...
+//        wxSleep(5);
+//
+//    wxInputStream *httpStream = get.GetInputStream(_T("https://api.thingspeak.com/channels/1696056/feeds.json?api_key=1HP8YO9UF0RCS5AA&results=2"));
+//  //  get.GetInputStream(_T("https://api.thingspeak.com/update?api_key=XJRRB0QZIZ2XGSA6&field2=2"));
+//  //  get.GetInputStream(_T("https://api.thingspeak.com/update?api_key=XJRRB0QZIZ2XGSA6&field3=1234"));
+//    if (get.GetError() == wxPROTO_NOERR)
+//    {
+//        wxString res;
+//        wxStringOutputStream out_stream(&res);
+//        httpStream->Read(out_stream);
+//        std::string rawMeasurementsInJson = std::string(res.mb_str());
+//        std::cout<< rawMeasurementsInJson <<std::endl;
+//        RemoteDataHandler remoteDataHandler(rawMeasurementsInJson);
+//        //wxMessageBox(res);
+//        // wxLogVerbose( wxString(_T(" returned document length: ")) << res.Length() );
+//        auto end = std::chrono::steady_clock::now();
+//
+//        std::cout<<"Connection to server and read data duration: " <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() <<"ms\n";
+//        regexExperiments(res);
+//    } else{
+//        std::cerr << "Reading data from webserver unsuccessful" <<std::endl;
+//    }
 }
 
 void RemoteDataInterpreter::initAccepting() {
