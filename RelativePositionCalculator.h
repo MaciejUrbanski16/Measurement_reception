@@ -1,10 +1,5 @@
-//
-// Created by Admin on 24.03.2022.
-//
-
 #ifndef SERVER_FOR_TRACKER_RELATIVEPOSITIONCALCULATOR_H
 #define SERVER_FOR_TRACKER_RELATIVEPOSITIONCALCULATOR_H
-
 
 #include <cstdint>
 #include <utility>
@@ -41,6 +36,5 @@ private:
     std::optional<std::pair<double, double>> calculateAcoefficient(const float degree);
     double invalidAzimutDegree{65535.0};
 };
-
 
 #endif //SERVER_FOR_TRACKER_RELATIVEPOSITIONCALCULATOR_H

@@ -13,7 +13,6 @@
 #include <boost/regex.hpp>
 #include <regex>
 
-
 #include "boost/algorithm/cxx11/any_of.hpp"
 
 template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>

@@ -1,8 +1,3 @@
-// wxWidgets "Hello World" Program
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "boost/asio.hpp"
-#include <thread>
-//#include <boost/thread.hpp>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 
@@ -34,9 +29,4 @@ bool PseudoServerTracker::OnInit()
     return true;
 }
 
-
 wxIMPLEMENT_APP(PseudoServerTracker);
-
-
-
-

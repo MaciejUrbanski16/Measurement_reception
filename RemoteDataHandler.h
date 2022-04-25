@@ -1,10 +1,5 @@
-//
-// Created by Admin on 03.03.2022.
-//
-
 #ifndef SERVER_FOR_TRACKER_REMOTEDATAHANDLER_H
 #define SERVER_FOR_TRACKER_REMOTEDATAHANDLER_H
-
 
 #include <array>
 #include <cstdint>
@@ -66,6 +61,5 @@ private:
     int32_t zAccelerationWebServer{};
     bool isAzimutValid(int incomingAzimut);
 };
-
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAHANDLER_H
