@@ -1,6 +1,7 @@
 #include "PseudoServerContext.h"
 #include "RemoteDataHandler.h"
 #include "RemoteDataInterpreter.h"
+#include "TimeFormatter.h"
 
 #include <wx/dcclient.h>
 #include <wx/panel.h>
@@ -226,6 +227,7 @@ void RemoteDataInterpreter::OnVelocityPlotChoose(wxCommandEvent& event)
 void RemoteDataInterpreter::OnStartDistanceMeasurement(wxCommandEvent& event)
 {
     startDistanceMeasurement();
+
     std::cout<<"Start distance measurement"<<std::endl;
 }
 
@@ -326,6 +328,9 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     {
         startDistanceMeasurement();
         std::cout<<"Start distance measusre"<<std::endl;
+        TimeFormatter timeFormatter;
+        const std::string currentTimeAsString = timeFormatter.formatCurrentTimeToString();
+    std::cout<<"Current time: " << currentTimeAsString<<std::endl;
     }
     else if(event.GetEventObject() == stopDistanceMeasurementButton)
     {
@@ -354,8 +359,10 @@ void RemoteDataInterpreter::OnExit(wxCommandEvent& event)
 
 void RemoteDataInterpreter::OnAbout(wxCommandEvent& event)
 {
-    wxMessageBox("This is a wxWidgets Hello World example",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
+    wxMessageBox("This is aplication to receive and show incoming data from remote device. The data is compliant with measurements:"
+                 " azimuth[degree], acceleration[m/s^2]. After reception the following calculations are performed:"
+                 "velocity[m/s], position.",
+                 "About application", wxOK | wxICON_INFORMATION);
 }
 
 void RemoteDataInterpreter::OnHello(wxCommandEvent& event)
