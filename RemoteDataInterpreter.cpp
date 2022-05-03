@@ -15,6 +15,7 @@
 #include <regex>
 
 #include "boost/algorithm/cxx11/any_of.hpp"
+#include "ManualMeasurements.h"
 
 template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>
 T ProperlySeededRandomEngine () {
@@ -328,13 +329,14 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     {
         startDistanceMeasurement();
         std::cout<<"Start distance measusre"<<std::endl;
-        TimeFormatter timeFormatter;
-        const std::string currentTimeAsString = timeFormatter.formatCurrentTimeToString();
+        const std::string currentTimeAsString = TimeFormatter::getCurrentTimeAsString();
+        manualMeasurements.startTime = currentTimeAsString;
     std::cout<<"Current time: " << currentTimeAsString<<std::endl;
     }
     else if(event.GetEventObject() == stopDistanceMeasurementButton)
     {
         stopDistanceMeasurement();
+
         std::cout<<"Stop distance measusre"<<std::endl;
     }
 }
@@ -514,14 +516,13 @@ void RemoteDataInterpreter::updateMeasuredDistance(long long int velocity) {
     measuredDistance += velocity/timeMeasurementIntervalMs;
 }
 
-void RemoteDataInterpreter::updateMeasurementsTable(std::string startTime, std::string stopTime, std::string totalTime,
-                                                    std::string distance) {
+void RemoteDataInterpreter::updateMeasurementsTable() {
     listOfMeasuredDistances->InsertItem(actualIndexInMeasurementTable, *statisticOfMeasurement);
 
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 0, startTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 1, stopTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 2, totalTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 3, distance, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 0, manualMeasurements.startTime, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 1, manualMeasurements.stopTime, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 2, manualMeasurements.totalTime, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 3, manualMeasurements.distance, -1);
     actualIndexInMeasurementTable++;
 }
 
@@ -531,6 +532,8 @@ void RemoteDataInterpreter::startDistanceMeasurement() {
                      "About Measurement distance", wxOK | wxICON_INFORMATION);
     }
     else {
+        manualMeasurements.start = std::chrono::steady_clock::now();
+        manualMeasurements.startTime = TimeFormatter::getCurrentTimeAsString();
         isStartedMeasurementDistance = true;
     }
 }
@@ -542,15 +545,17 @@ void RemoteDataInterpreter::stopDistanceMeasurement() {
                      "About Measurement distance", wxOK | wxICON_INFORMATION);
     }
     else{
-        std::string startTime{"Maciej"};
-        std::string stopTime{"Maciej"};
-        std::string totalTime{"Maciej"};
-        std::string distance{"Maciej"};
-        updateMeasurementsTable(startTime, stopTime, totalTime, distance);
+        auto end = std::chrono::steady_clock::now();
+        manualMeasurements.stopTime = TimeFormatter::getCurrentTimeAsString();
+        uint32_t durationOfManualMeasurementsMs = std::chrono::duration_cast<std::chrono::milliseconds>(end - manualMeasurements.start).count();
+//        std::cout<<"Duratio of manual measurement: " << duration << " , " << std::chrono::duration_cast<std::chrono::milliseconds>(end - manualMeasurements.start).count() <<"ms\n";
+        manualMeasurements.totalTime = TimeFormatter::getTotalTimeAsString(durationOfManualMeasurementsMs);
+        std::cout<<std::endl<<manualMeasurements.totalTime<<std::endl;
+
+        updateMeasurementsTable();
 
         isStartedMeasurementDistance = false;
     }
-
 }
 
 void RemoteDataInterpreter::updateDataToPlotAcceleration(const RemoteDataHandler &remoteDataHandler) {

@@ -6,8 +6,9 @@
 
 class TimeFormatter {
 public:
-    std::string formatCurrentTimeToString();
-};
+    static std::string getCurrentTimeAsString();
 
+    static std::string getTotalTimeAsString(uint32_t ms);
+};
 
 #endif //SERVER_FOR_TRACKER_TIMEFORMATTER_H

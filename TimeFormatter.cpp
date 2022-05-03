@@ -2,7 +2,7 @@
 #include <sstream>
 #include "TimeFormatter.h"
 
-std::string TimeFormatter::formatCurrentTimeToString() {
+std::string TimeFormatter::getCurrentTimeAsString() {
     time_t timetoday;
     time(&timetoday);
     tm *local_time = localtime(&timetoday);
@@ -28,4 +28,35 @@ std::string TimeFormatter::formatCurrentTimeToString() {
     }
 
     return timeForPerformingMeasurements.str();
+}
+
+std::string TimeFormatter::getTotalTimeAsString(uint32_t durationMs) {
+    std::stringstream durationConvertedToString;
+
+    if(durationMs < 1000)
+    {
+        durationConvertedToString << "00:00:00." << durationMs % 1000;
+    }
+    else if(durationMs >= 1000 && durationMs < 60000)
+    {
+        if(durationMs < 10000)
+        {
+            durationConvertedToString << "00:00:0" << (durationMs  - durationMs % 1000) / 1000 << "." << durationMs % 1000;
+        } else{
+            durationConvertedToString << "00:00:" << (durationMs  - durationMs % 1000) / 1000 << "." << durationMs % 1000;
+        }
+    }
+    else if(durationMs >= 60000 && durationMs < 3600000)
+    {
+        if(durationMs < 600000)
+        {
+            durationConvertedToString << "00:0" << (durationMs  - durationMs % 60000) / 60000 << ":"
+            << (durationMs  - durationMs % 1000) / 1000 << "." << durationMs % 1000;
+        } else{
+            durationConvertedToString << "00:" << (durationMs  - durationMs % 60000) / 60000 << ":"
+            << (durationMs  - durationMs % 1000) / 1000 << "." << durationMs % 1000;
+        }
+    }
+
+    return durationConvertedToString.str();
 }

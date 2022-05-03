@@ -8,6 +8,7 @@
 #include "mathplot/mathplot.h"
 #include "VelocityCalculator.h"
 #include "RelativePositionCalculator.h"
+#include "ManualMeasurements.h"
 
 class PseudoServerContext;
 class RemoteDataHandler;
@@ -96,6 +97,7 @@ private:
     float actualAzimutDeg{0.0f};
     VelocityCalculator velocityCalculator;
     RelativePositionCalculator relativePositionCalculator;
+    ManualMeasurements manualMeasurements{};
 
     int dice =1;
     bool isStartedMeasurementDistance{false};
@@ -127,7 +129,7 @@ private:
 
     void updateMeasuredDistance(long long int velocity);
 
-    void updateMeasurementsTable(std::string startTime, std::string stopTime, std::string totalTime, std::string distance);
+    void updateMeasurementsTable();
 
 
     void startDistanceMeasurement();
