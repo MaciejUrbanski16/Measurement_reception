@@ -165,6 +165,9 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnDisconnectFromRemoteDevice, this, 62);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStartDistanceMeasurement, this, 63);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStopDistanceMeasurement, this, 64);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnPositionPlotChoose, this, 68);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnAccelerationPlotChoose, this, 69);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnVelocityPlotChoose, this, 70);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnSetTimeInterval, this, 71);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExit, this, wxID_EXIT);
@@ -200,6 +203,24 @@ void RemoteDataInterpreter::OnSetTimeInterval(wxCommandEvent& event)
 void RemoteDataInterpreter::OnExportCsv(wxCommandEvent& event)
 {
     std::cout<<"Eksport csv"<<std::endl;
+}
+
+void RemoteDataInterpreter::OnPositionPlotChoose(wxCommandEvent& event)
+{
+    showingPlotType = static_cast<uint8_t>(Plot::POSITION);
+    preparePositionPlot();
+}
+
+void RemoteDataInterpreter::OnAccelerationPlotChoose(wxCommandEvent& event)
+{
+    showingPlotType = static_cast<uint8_t>(Plot::ACCELERATION);
+    prepareAccelerationPlot();
+}
+
+void RemoteDataInterpreter::OnVelocityPlotChoose(wxCommandEvent& event)
+{
+    showingPlotType = static_cast<uint8_t>(Plot::VELOCITY);
+    prepareVelocityPlot();
 }
 
 void RemoteDataInterpreter::OnStartDistanceMeasurement(wxCommandEvent& event)
@@ -255,8 +276,23 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
         Sock->Read(buf.data(), buf.max_size());
 
         RemoteDataHandler remoteDataHandler(buf);
+        actualAzimutDeg = remoteDataHandler.getAzimut();
+        updateDataToPlotAcceleration(remoteDataHandler);
+        velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
+                                                   remoteDataHandler.getTimeIntervalMs());
+        updateDataToPlotVelocity(remoteDataHandler);
 
-        for (int i = 0; i < 25; i++) {
+        relativePositionCalculator.setPreviousRelativePosition({0.0,0.0});
+        relativePositionCalculator.calculateActualRelativePosition(velocityCalculator.getActualVelocity(),
+                                                                   remoteDataHandler.getTimeIntervalMs(),
+                                                                   remoteDataHandler.getAzimut());
+        updateDataToPlotRelativePosition(remoteDataHandler);
+        if(isStartedMeasurementDistance){
+            updateMeasuredDistance(velocityCalculator.getActualVelocity());
+        }
+        refreshPanel();
+
+        for (int i = 0; i < 100; i++) {
             std::cout << buf[i];
         }
         std::cout<<"    numMsg:"<< numOfMsg << std::endl;

@@ -147,6 +147,12 @@ private:
     void regexExperiments(wxString &inputStr);
 
     void OnTimer(wxTimerEvent &event);
+
+    void OnPositionPlotChoose(wxCommandEvent &event);
+
+    void OnAccelerationPlotChoose(wxCommandEvent &event);
+
+    void OnVelocityPlotChoose(wxCommandEvent &event);
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
