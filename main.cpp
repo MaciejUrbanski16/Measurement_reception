@@ -1,18 +1,10 @@
 #include <wx/wxprec.h>
+#include "boost/asio.hpp"
 #ifndef WX_PRECOMP
-
-#include <wx/dc.h>
 #include <wx/gdicmn.h>
-
 #endif
-
 #include "RemoteDataInterpreter.h"
-#include "PseudoServerContext.h"
 
-class ReceivedDataContainer
-{
-
-};
 class RemoteDataInterpreter;
 
 class PseudoServerTracker : public wxApp
@@ -23,8 +15,8 @@ public:
 
 bool PseudoServerTracker::OnInit()
 {
-    RemoteDataInterpreter *frame = new RemoteDataInterpreter();
-    frame->Show();
+    RemoteDataInterpreter *remoteDataInterpreter = new RemoteDataInterpreter();
+    remoteDataInterpreter->Show();
 
     return true;
 }
