@@ -5,6 +5,8 @@
 
 #include <wx/dcclient.h>
 #include <wx/panel.h>
+#include <wx/textfile.h>
+#include <fstream>
 #include <wx/ribbon/buttonbar.h>
 #include <wx/notebook.h>
 #include <random>
@@ -69,11 +71,17 @@ RemoteDataInterpreter::RemoteDataInterpreter()
 
     setupTimeInterval = new wxTextCtrl(this, wxID_ANY, "value", {300, 900}, {180, 60}, 0);
 
-    listOfMeasuredDistances = new wxListCtrl(this, 901, {300, 0}, {400, 600}, wxLC_REPORT);
+    openFileWithMeasurements = new wxFilePickerCtrl(this, 900,
+            "", "Open file", "",
+            {100, 700}, {300,50});
+
+    listOfMeasuredDistances = new wxListCtrl(this, 901, {300, 0}, {600, 600}, wxLC_REPORT);
     listOfMeasuredDistances->InsertColumn(0, "Start time", wxLIST_FORMAT_LEFT);
     listOfMeasuredDistances->InsertColumn(1, "Stop time", wxLIST_FORMAT_LEFT);
     listOfMeasuredDistances->InsertColumn(2, "Total time", wxLIST_FORMAT_LEFT);
-    listOfMeasuredDistances->InsertColumn(3, "Distance", wxLIST_FORMAT_LEFT);
+    listOfMeasuredDistances->InsertColumn(3, "Avg v", wxLIST_FORMAT_LEFT);
+    listOfMeasuredDistances->InsertColumn(4, "Distance", wxLIST_FORMAT_LEFT);
+    listOfMeasuredDistances->InsertColumn(5, "Total distance", wxLIST_FORMAT_LEFT);
 
     statisticOfMeasurement     = new wxListItem();
 
@@ -86,20 +94,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     listOfMeasuredDistances->InsertItem(2, *statisticOfMeasurement);
     listOfMeasuredDistances->InsertItem(3, *statisticOfMeasurement);
     listOfMeasuredDistances->InsertItem(4, *statisticOfMeasurement);
-
-    listOfMeasuredDistances->SetItem(0, 0, wxT("1"), -1);
-    listOfMeasuredDistances->SetItem(0, 1, wxT("1"), -1);
-    listOfMeasuredDistances->SetItem(0, 2, wxT("23"), -1);
-    listOfMeasuredDistances->SetItem(0, 3, wxT("8:34"), -1);
-    listOfMeasuredDistances->SetItem(1, 0, wxT("2"), -1);
-    listOfMeasuredDistances->SetItem(1, 1, wxT("2"), -1);
-    listOfMeasuredDistances->SetItem(2, 0, wxT("3"), -1);
-    listOfMeasuredDistances->SetItem(2, 1, wxT("3"), -1);
-    listOfMeasuredDistances->SetItem(3, 0, wxT("4"), -1);
-    listOfMeasuredDistances->SetItem(3, 1, wxT("4"), -1);
-    listOfMeasuredDistances->SetItem(4, 1, wxT("Maciej"), -1);
-    actualIndexInMeasurementTable = 5u;
-
+    listOfMeasuredDistances->InsertItem(5, *statisticOfMeasurement);
 
     wxImage::AddHandler(new wxPNGHandler);
 
@@ -140,7 +135,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     timeAxisForAcceleration->SetDrawOutsideMargins(false);
     accelerationAxis->SetDrawOutsideMargins(false);
 
-    tracePlot = new mpWindow(this, -1, wxPoint(700, 0), wxSize(600, 600), wxSUNKEN_BORDER );
+    tracePlot = new mpWindow(this, -1, wxPoint(900, 0), wxSize(600, 600), wxSUNKEN_BORDER );
     tracePlot->SetMargins(30, 30, 40, 60);
 
     mpFxyVector = new mpFXYVector();
@@ -152,7 +147,6 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     mpFxyVector->SetDrawOutsideMargins(false);
     tracePlot->AddLayer(mpFxyVector);
     tracePlot->SetMPScrollbars(true);
-    readThingSpeakServer();
     numClients = 0;
     m_timer = new wxTimer(this, 150);
     m_timer->Start(1000);
@@ -175,6 +169,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExit, this, wxID_EXIT);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnStartButton, this, 101);
     Bind(wxEVT_BUTTON, &RemoteDataInterpreter::OnConnectButton, this, wxID_YES);
+    Bind(wxEVT_FILEPICKER_CHANGED, &RemoteDataInterpreter::OnBrowseFile, this, 900);
 
     Bind(wxEVT_SOCKET, &RemoteDataInterpreter::OnServerEvent,
             this, static_cast<int>(ConnectionUtils::SERVER_ID));
@@ -200,6 +195,10 @@ void RemoteDataInterpreter::OnSetTimeInterval(wxCommandEvent& event)
         updateTimeMeasurementIntervalMs(text);
         std::cout << timeMeasurementIntervalMs << std::endl;
     }
+}
+
+void RemoteDataInterpreter::OnBrowseFile(wxFileDirPickerEvent& event) {
+    std::cout<<"File was choosen" <<std::endl;
 }
 
 void RemoteDataInterpreter::OnExportCsv(wxCommandEvent& event)
@@ -382,33 +381,6 @@ void RemoteDataInterpreter::OnChangeToPositionPlot(wxCommandEvent& event) {
 
 void RemoteDataInterpreter::OnTimer(wxTimerEvent& event)
 {
-//    auto start = std::chrono::steady_clock::now();
-//    wxHTTP get;
-//    get.SetHeader(_T("Content-type"), _T("text/html; charset=utf-8"));
-//    get.SetTimeout(10); // 10 seconds of timeout instead of 10 minutes ...
-//    while (!get.Connect(_T("www.thingspeak.com")))  // only the server, no pages here yet ...
-//        wxSleep(5);
-//
-//    wxInputStream *httpStream = get.GetInputStream(_T("https://api.thingspeak.com/channels/1696056/feeds.json?api_key=1HP8YO9UF0RCS5AA&results=2"));
-//  //  get.GetInputStream(_T("https://api.thingspeak.com/update?api_key=XJRRB0QZIZ2XGSA6&field2=2"));
-//  //  get.GetInputStream(_T("https://api.thingspeak.com/update?api_key=XJRRB0QZIZ2XGSA6&field3=1234"));
-//    if (get.GetError() == wxPROTO_NOERR)
-//    {
-//        wxString res;
-//        wxStringOutputStream out_stream(&res);
-//        httpStream->Read(out_stream);
-//        std::string rawMeasurementsInJson = std::string(res.mb_str());
-//        std::cout<< rawMeasurementsInJson <<std::endl;
-//        RemoteDataHandler remoteDataHandler(rawMeasurementsInJson);
-//        //wxMessageBox(res);
-//        // wxLogVerbose( wxString(_T(" returned document length: ")) << res.Length() );
-//        auto end = std::chrono::steady_clock::now();
-//
-//        std::cout<<"Connection to server and read data duration: " <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() <<"ms\n";
-//        regexExperiments(res);
-//    } else{
-//        std::cerr << "Reading data from webserver unsuccessful" <<std::endl;
-//    }
 }
 
 void RemoteDataInterpreter::initAccepting() {
@@ -514,6 +486,12 @@ void RemoteDataInterpreter::updateTimeMeasurementIntervalMs(const char *const te
 
 void RemoteDataInterpreter::updateMeasuredDistance(long long int velocity) {
     measuredDistance += velocity/timeMeasurementIntervalMs;
+    manualMeasurements.distance = std::to_string(measuredDistance);
+
+    measuredVelocityInOnePeriondOfManualMeasurements += velocity;
+    measuredDistanceInOnePeriodOfManualMeasurements += velocity/timeMeasurementIntervalMs;
+    std::cout<<"DEB counterOfMeasureedDistnace: " << counterOfManualMeasurementsSamples << "measured distance" << measuredDistance << std::endl;
+    counterOfManualMeasurementsSamples++;
 }
 
 void RemoteDataInterpreter::updateMeasurementsTable() {
@@ -522,7 +500,10 @@ void RemoteDataInterpreter::updateMeasurementsTable() {
     listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 0, manualMeasurements.startTime, -1);
     listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 1, manualMeasurements.stopTime, -1);
     listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 2, manualMeasurements.totalTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 3, manualMeasurements.distance, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 5, manualMeasurements.distance, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 4, manualMeasurements.averagedVelocity, -1);
+    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 3, manualMeasurements.distanceInPeriod, -1);
+    std::cout<<"DEB measuredVelocity" << measuredVelocityInOnePeriondOfManualMeasurements << "Counter" << measuredVelocityInOnePeriondOfManualMeasurements/counterOfManualMeasurementsSamples<<std::endl;
     actualIndexInMeasurementTable++;
 }
 
@@ -534,6 +515,7 @@ void RemoteDataInterpreter::startDistanceMeasurement() {
     else {
         manualMeasurements.start = std::chrono::steady_clock::now();
         manualMeasurements.startTime = TimeFormatter::getCurrentTimeAsString();
+
         isStartedMeasurementDistance = true;
     }
 }
@@ -551,10 +533,33 @@ void RemoteDataInterpreter::stopDistanceMeasurement() {
 //        std::cout<<"Duratio of manual measurement: " << duration << " , " << std::chrono::duration_cast<std::chrono::milliseconds>(end - manualMeasurements.start).count() <<"ms\n";
         manualMeasurements.totalTime = TimeFormatter::getTotalTimeAsString(durationOfManualMeasurementsMs);
         std::cout<<std::endl<<manualMeasurements.totalTime<<std::endl;
+        manualMeasurements.distanceInPeriod = std::to_string(measuredDistanceInOnePeriodOfManualMeasurements);
+        manualMeasurements.averagedVelocity = std::to_string(static_cast<float>(measuredVelocityInOnePeriondOfManualMeasurements /
+                static_cast<float>(counterOfManualMeasurementsSamples)));
+
+        collectedManualMeasurements.push_back(manualMeasurements);
 
         updateMeasurementsTable();
 
+        //to do create better save to file
+        std::ofstream myfile("example.txt", std::ios::app | std::ios::out);
+        myfile << manualMeasurements.startTime <<","<<manualMeasurements.stopTime<<","
+        <<manualMeasurements.distance<<","<<manualMeasurements.totalTime<<","<<
+        manualMeasurements.distanceInPeriod<<","<<manualMeasurements.averagedVelocity<<"\n";
+        myfile.close();
+
+        manualMeasurements.clearMeasurements();
+
+        for(const auto& meas : collectedManualMeasurements)
+        {
+            std::cout<<"Collected startTime: "<<meas.startTime << std::endl;
+        }
+
         isStartedMeasurementDistance = false;
+
+        measuredDistanceInOnePeriodOfManualMeasurements = 0lu;
+        measuredVelocityInOnePeriondOfManualMeasurements = 0lu;
+        counterOfManualMeasurementsSamples = 0u;
     }
 }
 
@@ -581,77 +586,4 @@ void RemoteDataInterpreter::updateDataToPlotRelativePosition(const RemoteDataHan
     yCoordinatesOfRelativePosition.push_back(actualRelativePosition.second);
     std::cout<< "DEB Calculated relative position x: " << actualRelativePosition.first
              << " y: " << actualRelativePosition.second << "Azimut: " << handler.getAzimut() << std::endl;
-}
-
-void RemoteDataInterpreter::readThingSpeakServer() {
- //   auto start = std::chrono::steady_clock::now();
- //   wxHTTP get;
- //   get.SetHeader(_T("Content-type"), _T("text/html; charset=utf-8"));
- //   get.SetTimeout(10); // 10 seconds of timeout instead of 10 minutes ...
- //   while (!get.Connect(_T("www.thingspeak.com")))  // only the server, no pages here yet ...
- //       wxSleep(5);
-
- //   wxInputStream *httpStream = get.GetInputStream(_T("https://api.thingspeak.com/channels/1691975/fields/2.json?api_key=3M463IMJL16XWVIK&results=2"));
- //   if (get.GetError() == wxPROTO_NOERR)
- //   {
- //       wxString res;
- //       wxStringOutputStream out_stream(&res);
- //       httpStream->Read(out_stream);
- //       //wxMessageBox(res);
- //       // wxLogVerbose( wxString(_T(" returned document length: ")) << res.Length() );
- //       auto end = std::chrono::steady_clock::now();
-
- //       std::cout<<"Connection to server and read data duration: " <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() <<"ms\n";
- //       regexExperiments(res);
- //   }
-}
-
-void RemoteDataInterpreter::regexExperiments(wxString & inputStr) {
- //   std::cout<< inputStr <<std::endl;
- //   std::string stlstring = std::string(inputStr.mb_str());
-
- //   std::regex self_regex("\\b[A-Za-z][A-Za-z0-9]{2,15}\\b",
- //                         std::regex_constants::ECMAScript | std::regex_constants::icase);
- //   if (std::regex_search(stlstring, self_regex)) {
- //       std::cout << "Text contains the phrase 'field'\n";
- //   }
-
- //   std::regex fieldRegex("\\b[f][i][A-Za-z0-9\":\"]{2,19}\\b");
- //   std::regex fieldValueRegex("\\b[0-9]{1,9}\\b");
- //   auto words_begin =
- //           std::sregex_iterator(stlstring.begin(), stlstring.end(), fieldRegex);
- //   auto words_end = std::sregex_iterator();
-
- //   std::cout << "Found "
- //             << std::distance(words_begin, words_end)
- //             << " words\n";
-
- //   for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
- //       std::smatch match = *i;
- //       std::string match_str = match.str();
- //       auto valueBegin = std::sregex_iterator(match_str.begin(), match_str.end(), fieldValueRegex);
- //       auto valueEnd = std::sregex_iterator();
- //           std::cout << "  " << match_str << "         ";
- //       for (std::sregex_iterator j = valueBegin; j != valueEnd; ++j) {
- //           std::smatch value = *j;
- //           std::string valueStr = value.str();
- //          std::cout<<"   " << valueStr;
- //       }
- //       std::cout<<std::endl;
- //       }
-
-
-//    const int N = 6;
-//    std::cout << "Words longer than " << N << " characters:\n";
-//    for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-//        std::smatch match = *i;
-//        std::string match_str = match.str();
-//        if (match_str.size() > N) {
-//            std::cout << "  " << match_str << '\n';
-//        }
-//    }
-//
-//    std::regex long_word_regex("(\\w{7,})");
-//    std::string new_s = std::regex_replace(s, long_word_regex, "[$&]");
-//    std::cout << new_s << '\n';
 }

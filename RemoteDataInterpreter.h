@@ -5,6 +5,7 @@
 #include "wx/socket.h"
 #include <wx/dcbuffer.h>
 #include <wx/listctrl.h>
+#include <wx/filepicker.h>
 #include "mathplot/mathplot.h"
 #include "VelocityCalculator.h"
 #include "RelativePositionCalculator.h"
@@ -71,6 +72,7 @@ private:
     wxBitmap *directionIndicator{nullptr};
     wxBufferedPaintDC *dc{nullptr};
     wxBitmap *directionVisualisation{nullptr};
+    wxFilePickerCtrl *openFileWithMeasurements{nullptr};
     mpWindow *actualPlot{nullptr};
     mpWindow *tracePlot{nullptr};
     mpWindow *velocityPlot{nullptr};
@@ -98,10 +100,16 @@ private:
     VelocityCalculator velocityCalculator;
     RelativePositionCalculator relativePositionCalculator;
     ManualMeasurements manualMeasurements{};
+    std::vector<ManualMeasurements> collectedManualMeasurements{};
 
     int dice =1;
     bool isStartedMeasurementDistance{false};
     uint64_t measuredDistance{0};
+
+    uint64_t measuredDistanceInOnePeriodOfManualMeasurements{0};
+    uint64_t measuredVelocityInOnePeriondOfManualMeasurements{0};
+    uint32_t counterOfManualMeasurementsSamples{0};
+
     uint8_t showingPlotType{static_cast<uint8_t>(Plot::NONE)};
     uint32_t timeMeasurementIntervalMs{100u};
     uint32_t actualIndexInMeasurementTable{0u};
@@ -142,12 +150,6 @@ private:
 
     void updateDataToPlotAcceleration(const RemoteDataHandler &handler);
 
-    void readThingSpeakServer();
-
-    void regexExperiments(std::string &inputStr);
-
-    void regexExperiments(wxString &inputStr);
-
     void OnTimer(wxTimerEvent &event);
 
     void OnPositionPlotChoose(wxCommandEvent &event);
@@ -155,6 +157,8 @@ private:
     void OnAccelerationPlotChoose(wxCommandEvent &event);
 
     void OnVelocityPlotChoose(wxCommandEvent &event);
+
+    void OnBrowseFile(wxFileDirPickerEvent& event);
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
