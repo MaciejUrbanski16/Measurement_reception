@@ -18,6 +18,8 @@
 
 #include "boost/algorithm/cxx11/any_of.hpp"
 #include "ManualMeasurements.h"
+#include "CsvWriter.h"
+#include "CsvReader.h"
 
 template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>
 T ProperlySeededRandomEngine () {
@@ -42,6 +44,9 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     menuFile->AppendSeparator();
     menuFile->Append(63, "Start distance measurement", "If distance measurement is not started start it at the moment of button click", false);
     menuFile->Append(64, "Stop distance measurement", "If distance measurement started stop it the moment of button click", false);
+    menuFile->AppendSeparator();
+    menuFile->Append(200, "Read manual measurements", "Read manual measurements from csv file", false);
+    menuFile->Append(201, "Write manual measurements", "Write manual measurements to csv file", false);
     menuFile->AppendSeparator();
     menuFile->Append(wxID_EXIT);
 
@@ -157,6 +162,8 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnHello, this, 1);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnChangeToPositionPlot, this, 59);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnExportCsv, this, 60);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnReadManualMeasurements, this, 200);
+    Bind(wxEVT_MENU, &RemoteDataInterpreter::OnWriteManualMeasurements, this, 201);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStartListening, this, 61);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnDisconnectFromRemoteDevice, this, 62);
     Bind(wxEVT_MENU, &RemoteDataInterpreter::OnStartDistanceMeasurement, this, 63);
@@ -198,12 +205,41 @@ void RemoteDataInterpreter::OnSetTimeInterval(wxCommandEvent& event)
 }
 
 void RemoteDataInterpreter::OnBrowseFile(wxFileDirPickerEvent& event) {
-    std::cout<<"File was choosen" <<std::endl;
+    pathToSaveMeasurements = event.GetPath();
+    std::cout<<"File was choosen in path: " << pathToSaveMeasurements.value() << std::endl;
 }
 
 void RemoteDataInterpreter::OnExportCsv(wxCommandEvent& event)
 {
     std::cout<<"Eksport csv"<<std::endl;
+}
+
+void RemoteDataInterpreter::OnReadManualMeasurements(wxCommandEvent& event)
+{
+    if(canMeasurementsBeRead()) {
+        CsvReader csvReader{};
+        std::vector<ManualMeasurements> readManualMeasurements =
+                csvReader.readManualMeasurementsFromFile(pathToSaveMeasurements.value());
+//        concatenateReadMeasurementsWithPreviouslyDoneOnes();
+    }
+    else{
+        wxMessageBox("Choosen path to file is incorrect. Choose or create another file using Browse button",
+                     "About measurement reading", wxOK | wxICON_ERROR);
+    }
+}
+
+void RemoteDataInterpreter::OnWriteManualMeasurements(wxCommandEvent& event)
+{
+    if(canMeasurementsBeSaved())
+    {
+        CsvWriter csvWriter{};
+        csvWriter.writeManualMeasurements(pathToSaveMeasurements.value(), manualMeasurements);
+        manualMeasurements.setSavingStatusOfMeasurements(false);
+    }
+    else{
+        wxMessageBox("Given measurements was alredy saved. Make another measurement to save in a file",
+                     "About measurement saving", wxOK | wxICON_ERROR);
+    }
 }
 
 void RemoteDataInterpreter::OnPositionPlotChoose(wxCommandEvent& event)
@@ -513,6 +549,8 @@ void RemoteDataInterpreter::startDistanceMeasurement() {
                      "About Measurement distance", wxOK | wxICON_INFORMATION);
     }
     else {
+        manualMeasurements.setSavingStatusOfMeasurements(true);
+        std::cout<<"DEB status of savin meas: " << manualMeasurements.wasAlreadyMeasurementsSaved() <<std::endl;
         manualMeasurements.start = std::chrono::steady_clock::now();
         manualMeasurements.startTime = TimeFormatter::getCurrentTimeAsString();
 
@@ -541,18 +579,18 @@ void RemoteDataInterpreter::stopDistanceMeasurement() {
 
         updateMeasurementsTable();
 
-        //to do create better save to file
-        std::ofstream myfile("example.txt", std::ios::app | std::ios::out);
-        myfile << manualMeasurements.startTime <<","<<manualMeasurements.stopTime<<","
-        <<manualMeasurements.distance<<","<<manualMeasurements.totalTime<<","<<
-        manualMeasurements.distanceInPeriod<<","<<manualMeasurements.averagedVelocity<<"\n";
-        myfile.close();
+//        if(pathToSaveMeasurements)
+//        {
+//            CsvWriter csvWriter{};
+//            csvWriter.writeManualMeasurements(pathToSaveMeasurements.value(), manualMeasurements);
+//        }
 
-        manualMeasurements.clearMeasurements();
+        //manualMeasurements.clearMeasurements();
 
+        std::cout<<"DEB status of savin stop meas: " << manualMeasurements.wasAlreadyMeasurementsSaved() <<std::endl;
         for(const auto& meas : collectedManualMeasurements)
         {
-            std::cout<<"Collected startTime: "<<meas.startTime << std::endl;
+            std::cout<<"DEB Collected startTime: "<<meas.startTime << std::endl;
         }
 
         isStartedMeasurementDistance = false;
@@ -586,4 +624,12 @@ void RemoteDataInterpreter::updateDataToPlotRelativePosition(const RemoteDataHan
     yCoordinatesOfRelativePosition.push_back(actualRelativePosition.second);
     std::cout<< "DEB Calculated relative position x: " << actualRelativePosition.first
              << " y: " << actualRelativePosition.second << "Azimut: " << handler.getAzimut() << std::endl;
+}
+
+bool RemoteDataInterpreter::canMeasurementsBeSaved() {
+    return pathToSaveMeasurements.has_value() && this->manualMeasurements.wasAlreadyMeasurementsSaved();
+}
+
+bool RemoteDataInterpreter::canMeasurementsBeRead() {
+    return pathToSaveMeasurements.has_value();
 }

@@ -2,6 +2,7 @@
 #define SERVER_FOR_TRACKER_MANUALMEASUREMENTS_H
 
 #include <string>
+#include <chrono>
 
 class ManualMeasurements {
 public:
@@ -18,6 +19,16 @@ public:
         return true;
     }
 
+    void setSavingStatusOfMeasurements(const bool wasMeasurementsSaved) noexcept
+    {
+        this->wasMeasurementsSaved = wasMeasurementsSaved;
+    }
+
+    bool wasAlreadyMeasurementsSaved() const noexcept
+    {
+        return wasMeasurementsSaved;
+    }
+
     std::string startTime{};
     std::string stopTime{};
     std::string totalTime{};
@@ -29,6 +40,7 @@ public:
 
 private:
     //CsvSaver / Reader(reader if needed should return array of manualMeasurements)
+    bool wasMeasurementsSaved{false};
 };
 
 

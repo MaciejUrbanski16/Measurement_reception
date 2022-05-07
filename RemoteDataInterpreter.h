@@ -80,6 +80,7 @@ private:
     mpInfoCoords *nfo{nullptr};
     mpFXYVector *mpFxyVector{nullptr};
     wxTimer   *m_timer;
+    std::optional<wxString> pathToSaveMeasurements{std::nullopt};
 
     mpScaleX* xAxisForPositioning{nullptr};
     mpScaleY* yAxisForPositioning{nullptr};
@@ -159,6 +160,14 @@ private:
     void OnVelocityPlotChoose(wxCommandEvent &event);
 
     void OnBrowseFile(wxFileDirPickerEvent& event);
+
+    void OnReadManualMeasurements(wxCommandEvent &event);
+
+    void OnWriteManualMeasurements(wxCommandEvent &event);
+
+    bool canMeasurementsBeSaved();
+
+    bool canMeasurementsBeRead();
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
