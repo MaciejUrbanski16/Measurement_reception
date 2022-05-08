@@ -220,6 +220,10 @@ void RemoteDataInterpreter::OnReadManualMeasurements(wxCommandEvent& event)
         CsvReader csvReader{};
         std::vector<ManualMeasurements> readManualMeasurements =
                 csvReader.readManualMeasurementsFromFile(pathToSaveMeasurements.value());
+        for(auto& measurement : readManualMeasurements)
+            {
+                std::cout<<"DEB READ " << measurement << std::endl;
+            }
 //        concatenateReadMeasurementsWithPreviouslyDoneOnes();
     }
     else{
@@ -590,7 +594,7 @@ void RemoteDataInterpreter::stopDistanceMeasurement() {
         std::cout<<"DEB status of savin stop meas: " << manualMeasurements.wasAlreadyMeasurementsSaved() <<std::endl;
         for(const auto& meas : collectedManualMeasurements)
         {
-            std::cout<<"DEB Collected startTime: "<<meas.startTime << std::endl;
+            std::cout<<"DEB Collected: "<<meas << std::endl;
         }
 
         isStartedMeasurementDistance = false;

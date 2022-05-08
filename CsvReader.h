@@ -1,7 +1,3 @@
-//
-// Created by Admin on 07.05.2022.
-//
-
 #ifndef SERVER_FOR_TRACKER_CSVREADER_H
 #define SERVER_FOR_TRACKER_CSVREADER_H
 
@@ -13,7 +9,25 @@
 class CsvReader {
 
 public:
-    std::vector<ManualMeasurements> readManualMeasurementsFromFile(wxString &wxString);
+    std::vector<ManualMeasurements> readManualMeasurementsFromFile(const wxString &wxString);
+
+private:
+    ManualMeasurements exctractManualMeasurements(const std::string &line) const;
+
+
+    std::vector<int> getIndexesOfSeparators(const std::string &line) const;
+
+    bool isSingleChar(const int currentIndex, const int nextIndex) const;
+
+    bool isSingleChar(std::vector<int> currentIndex) const;
+
+    std::string extractSingleChar(const std::string &lineFromFile, const int currentIndex, const int nextIndex) const;
+    std::string extractSingleChar(const std::string &lineFromFile, const int currentIndex) const;
+
+    bool isInputDataInLineCorrectlyStructurized(const std::string &inputLine) const;
+
+    constexpr static char separator{','};
+    constexpr static uint32_t supportedFormatOfCsvLine{5};
 };
 
 

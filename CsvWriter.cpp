@@ -7,8 +7,8 @@ void CsvWriter::writeManualMeasurements(const wxString &pathToSaveMeasurements, 
     std::ofstream myfile(path, std::ios::app | std::ios::out);
 
     myfile << manualMeasurements.startTime <<","<<manualMeasurements.stopTime<<","
-           <<manualMeasurements.distance<<","<<manualMeasurements.totalTime<<","<<
-           manualMeasurements.distanceInPeriod<<","<<manualMeasurements.averagedVelocity<<"\n";
+           <<manualMeasurements.totalTime<<","<<manualMeasurements.distance<<","<<
+           manualMeasurements.averagedVelocity<<","<<manualMeasurements.distanceInPeriod<<"\n";
 
     myfile.close();
 }

@@ -59,7 +59,6 @@ private:
     wxMenu *menuPlot{nullptr};
     wxMenu *submenuPlotChoose{nullptr};
     wxMenu *menuHelp{nullptr};
-  //  wxMenuBar *menuBar{nullptr};
     wxSocketServer *sock{nullptr};
     wxPanel *panel{nullptr};
     wxPanel *mainControlPanel{nullptr};
