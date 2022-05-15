@@ -4,6 +4,7 @@
 #include <wx/gdicmn.h>
 #endif
 #include "RemoteDataInterpreter.h"
+#include "PlotViewer.h"
 
 class RemoteDataInterpreter;
 
@@ -17,6 +18,7 @@ bool PseudoServerTracker::OnInit()
 {
     RemoteDataInterpreter *remoteDataInterpreter = new RemoteDataInterpreter();
     remoteDataInterpreter->Show();
+
 
     return true;
 }

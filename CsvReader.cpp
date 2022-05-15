@@ -6,6 +6,7 @@
 std::vector<ManualMeasurements> CsvReader::readManualMeasurementsFromFile(const wxString &pathToFile) {
     const std::string inputPath{pathToFile};
     std::ifstream inputMeasurementsFromFile(inputPath);
+    std::vector<ManualMeasurements> manualMeasurementsFromFile{};
 
     std::string inputLine{};
     while(inputMeasurementsFromFile >> inputLine)
@@ -13,16 +14,17 @@ std::vector<ManualMeasurements> CsvReader::readManualMeasurementsFromFile(const 
         if(isInputDataInLineCorrectlyStructurized(inputLine))
         {
             std::cout<<"DEB  input Line from file: " << inputLine <<std::endl;
+            ManualMeasurements manualMeasurementsReadFromFile = exctractManualMeasurements(inputLine);
+            manualMeasurementsFromFile.push_back(manualMeasurementsReadFromFile);
         }
         else{
             std::cerr<< "WRN Current input line from file is not supported. Only line with six csv fields can be processed!\n";
         }
     }
-    ManualMeasurements manualMeasurementsReadFromFile = exctractManualMeasurements(inputLine);
 
     inputMeasurementsFromFile.close();
 
-    return std::vector<ManualMeasurements>();
+    return manualMeasurementsFromFile;
 }
 
 ManualMeasurements CsvReader::exctractManualMeasurements(const std::string &line) const {

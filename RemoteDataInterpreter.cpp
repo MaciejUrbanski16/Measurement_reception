@@ -15,11 +15,13 @@
 #include "mathplot/mathplot.h"
 #include <boost/regex.hpp>
 #include <regex>
+#include <algorithm>
 
 #include "boost/algorithm/cxx11/any_of.hpp"
 #include "ManualMeasurements.h"
 #include "CsvWriter.h"
 #include "CsvReader.h"
+#include "PlotViewer.h"
 
 template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>
 T ProperlySeededRandomEngine () {
@@ -220,11 +222,23 @@ void RemoteDataInterpreter::OnReadManualMeasurements(wxCommandEvent& event)
         CsvReader csvReader{};
         std::vector<ManualMeasurements> readManualMeasurements =
                 csvReader.readManualMeasurementsFromFile(pathToSaveMeasurements.value());
+
         for(auto& measurement : readManualMeasurements)
             {
-                std::cout<<"DEB READ " << measurement << std::endl;
+                std::cout<<"DEB READ " << measurement << "\nSize of read: " << readManualMeasurements.size() <<  std::endl;
             }
-//        concatenateReadMeasurementsWithPreviouslyDoneOnes();
+        for(auto& measurement : collectedManualMeasurements)
+        {
+            std::cout<<"DEB COLLECTED " << measurement << std::endl;
+        }
+
+        concatenateReadMeasurementsWithPreviouslyDoneOnes(readManualMeasurements);
+       // updateMeasurementsTable(); //crash
+
+        for(const auto& measurement : collectedManualMeasurements)
+        {
+            std::cout<<"DEB CONCATANATED" << measurement << std::endl;
+        }
     }
     else{
         wxMessageBox("Choosen path to file is incorrect. Choose or create another file using Browse button",
@@ -361,6 +375,7 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
         updateDataToPlotRelativePosition(remoteDataHandler);
         if(isStartedMeasurementDistance){
             updateMeasuredDistance(velocityCalculator.getActualVelocity());
+            areDataReceived = true;
         }
         refreshPanel();
     }
@@ -378,6 +393,9 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
 
         std::cout<<"Stop distance measusre"<<std::endl;
     }
+    //this is for spawn new window
+   // PlotViewer *plotViewer = new PlotViewer();
+   // plotViewer->Show();
 }
 
 void RemoteDataInterpreter::OnPaint(wxPaintEvent & event){
@@ -535,16 +553,35 @@ void RemoteDataInterpreter::updateMeasuredDistance(long long int velocity) {
 }
 
 void RemoteDataInterpreter::updateMeasurementsTable() {
-    listOfMeasuredDistances->InsertItem(actualIndexInMeasurementTable, *statisticOfMeasurement);
 
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 0, manualMeasurements.startTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 1, manualMeasurements.stopTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 2, manualMeasurements.totalTime, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 5, manualMeasurements.distance, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 4, manualMeasurements.averagedVelocity, -1);
-    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 3, manualMeasurements.distanceInPeriod, -1);
-    std::cout<<"DEB measuredVelocity" << measuredVelocityInOnePeriondOfManualMeasurements << "Counter" << measuredVelocityInOnePeriondOfManualMeasurements/counterOfManualMeasurementsSamples<<std::endl;
-    actualIndexInMeasurementTable++;
+    uint32_t index{0};
+    std::cout<<"SIZE OF INPUT: " << collectedManualMeasurements.size() << "actualmeasureentIndex: "<< actualIndexInMeasurementTable <<std::endl;
+    const auto actualSizeToAdd = collectedManualMeasurements.size();
+    for(index = actualIndexInMeasurementTable; index < collectedManualMeasurements.size(); index++)
+    {
+        std::cout<<"INDEX " << index << "I?NDEX IN MEASUREMETN TABLE: " <<actualIndexInMeasurementTable << std::endl;
+        listOfMeasuredDistances->InsertItem(index, *statisticOfMeasurement);
+
+        listOfMeasuredDistances->SetItem(index, 0, collectedManualMeasurements.at(index).startTime, -1);
+        listOfMeasuredDistances->SetItem(index, 1, collectedManualMeasurements.at(index).stopTime, -1);
+        listOfMeasuredDistances->SetItem(index, 2, collectedManualMeasurements.at(index).totalTime, -1);
+        listOfMeasuredDistances->SetItem(index, 5, collectedManualMeasurements.at(index).distance, -1);
+        listOfMeasuredDistances->SetItem(index, 4, collectedManualMeasurements.at(index).averagedVelocity, -1);
+        listOfMeasuredDistances->SetItem(index, 3, collectedManualMeasurements.at(index).distanceInPeriod, -1);
+        std::cout<<"DEB measuredVelocity" << measuredVelocityInOnePeriondOfManualMeasurements << "Counter" << measuredVelocityInOnePeriondOfManualMeasurements/counterOfManualMeasurementsSamples<<std::endl;
+        std::cout<<"INDEX AFTER " << index << "I?NDEX IN MEASUREMETN TABLE: " <<actualIndexInMeasurementTable << std::endl;
+    }
+//    listOfMeasuredDistances->InsertItem(actualIndexInMeasurementTable, *statisticOfMeasurement);
+//
+//    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 0, manualMeasurements.startTime, -1);
+//    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 1, manualMeasurements.stopTime, -1);
+//    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 2, manualMeasurements.totalTime, -1);
+//    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 5, manualMeasurements.distance, -1);
+//    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 4, manualMeasurements.averagedVelocity, -1);
+//    listOfMeasuredDistances->SetItem(actualIndexInMeasurementTable, 3, manualMeasurements.distanceInPeriod, -1);
+    actualIndexInMeasurementTable = collectedManualMeasurements.size();
+    std::cout<<"INDEX AFTER " << index << "AFTER TABLE: " <<actualIndexInMeasurementTable << std::endl;
+    std::cout<<"DEB ACTUAL INDEX IN TABLE: " << actualIndexInMeasurementTable << " measuredVelocity" << measuredVelocityInOnePeriondOfManualMeasurements << "Counter" << measuredVelocityInOnePeriondOfManualMeasurements/counterOfManualMeasurementsSamples<<std::endl;
 }
 
 void RemoteDataInterpreter::startDistanceMeasurement() {
@@ -559,13 +596,14 @@ void RemoteDataInterpreter::startDistanceMeasurement() {
         manualMeasurements.startTime = TimeFormatter::getCurrentTimeAsString();
 
         isStartedMeasurementDistance = true;
+        areDataReceived = false;
     }
 }
 
 void RemoteDataInterpreter::stopDistanceMeasurement() {
-    if(not isStartedMeasurementDistance)
+    if(not isStartedMeasurementDistance or not areDataReceived)
     {
-        wxMessageBox("Function distance measurement has already been stopped!",
+        wxMessageBox("Function distance measurement has already been stopped or no data was received!",
                      "About Measurement distance", wxOK | wxICON_INFORMATION);
     }
     else{
@@ -598,6 +636,7 @@ void RemoteDataInterpreter::stopDistanceMeasurement() {
         }
 
         isStartedMeasurementDistance = false;
+        areDataReceived = false;
 
         measuredDistanceInOnePeriodOfManualMeasurements = 0lu;
         measuredVelocityInOnePeriondOfManualMeasurements = 0lu;
@@ -636,4 +675,14 @@ bool RemoteDataInterpreter::canMeasurementsBeSaved() {
 
 bool RemoteDataInterpreter::canMeasurementsBeRead() {
     return pathToSaveMeasurements.has_value();
+}
+
+void RemoteDataInterpreter::concatenateReadMeasurementsWithPreviouslyDoneOnes(
+        const std::vector<ManualMeasurements> &readMeasurementsFromFile) {
+
+    //this is expensive operation and it requires improvement
+    auto tempMeasurement = readMeasurementsFromFile;
+    std::copy(collectedManualMeasurements.begin(), collectedManualMeasurements.end(), std::back_inserter(tempMeasurement));
+    std::copy(readMeasurementsFromFile.begin(), readMeasurementsFromFile.end(), std::back_inserter(this->collectedManualMeasurements));
+    collectedManualMeasurements = tempMeasurement;
 }

@@ -167,6 +167,11 @@ private:
     bool canMeasurementsBeSaved();
 
     bool canMeasurementsBeRead();
+
+    void
+    concatenateReadMeasurementsWithPreviouslyDoneOnes(const std::vector<ManualMeasurements> &readMeasurementsFromFile);
+
+    bool areDataReceived{false};
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
