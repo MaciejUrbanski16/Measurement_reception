@@ -4,7 +4,7 @@
 #include <wx/gdicmn.h>
 #endif
 #include "RemoteDataInterpreter.h"
-#include "PlotViewer.h"
+#include "PositionPlotViewer.h"
 
 class RemoteDataInterpreter;
 

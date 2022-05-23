@@ -10,6 +10,9 @@
 #include "VelocityCalculator.h"
 #include "RelativePositionCalculator.h"
 #include "ManualMeasurements.h"
+#include "PositionPlotViewer.h"
+
+#include <variant>
 
 class PseudoServerContext;
 class RemoteDataHandler;
@@ -54,10 +57,14 @@ private:
 
     void initAccepting();
 
+    std::variant<std::monostate> plotViewer;
+    PositionPlotViewer *plotViewer1;
+
     wxMenuBar *menuBar{nullptr};
     wxMenu *menuFile{nullptr};
     wxMenu *menuPlot{nullptr};
     wxMenu *submenuPlotChoose{nullptr};
+    wxMenu *submenuPlotInNewWindow{nullptr};
     wxMenu *menuHelp{nullptr};
     wxSocketServer *sock{nullptr};
     wxPanel *panel{nullptr};
@@ -172,6 +179,14 @@ private:
     concatenateReadMeasurementsWithPreviouslyDoneOnes(const std::vector<ManualMeasurements> &readMeasurementsFromFile);
 
     bool areDataReceived{false};
+
+    void updateMeasurementsTableWhenReadMeasurements();
+
+    void OnVelocityPlotInNewWindow(wxCommandEvent& event);
+
+    void OnPositionPlotInNewWindow(wxCommandEvent &event);
+
+    void OnAccelerationPlotInNewWindow(wxCommandEvent &event);
 };
 
 #endif //SERVER_FOR_TRACKER_REMOTEDATAINTERPRETER_H
