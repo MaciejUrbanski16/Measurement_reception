@@ -6,11 +6,11 @@
 
 class VelocityCalculator {
 public:
-    void calculateActualVelocity(long long xAcc, uint16_t timeIntervalMs);
-    long long getActualVelocity() const;
+    void calculateActualVelocity(float xAcc, uint16_t timeIntervalMs);
+    float getActualVelocity() const;
 private:
-    long long actualVelocity{0};
-    long long int previousxAcc{0};
+    float actualVelocity{0.f};
+    float previousxAcc{0.f};
 };
 
 

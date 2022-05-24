@@ -10,7 +10,8 @@
 #include "VelocityCalculator.h"
 #include "RelativePositionCalculator.h"
 #include "ManualMeasurements.h"
-#include "PositionPlotViewer.h"
+#include "PlotViewers/PositionPlotViewer.h"
+#include "PlotViewers/VelocityPlotViewer.h"
 
 #include <variant>
 
@@ -57,8 +58,8 @@ private:
 
     void initAccepting();
 
-    std::variant<std::monostate> plotViewer;
-    PositionPlotViewer *plotViewer1;
+    std::variant<std::monostate, PositionPlotViewer, VelocityPlotViewer> plotViewer;
+    VelocityPlotViewer *plotViewer1;
 
     wxMenuBar *menuBar{nullptr};
     wxMenu *menuFile{nullptr};

@@ -21,7 +21,9 @@
 #include "ManualMeasurements.h"
 #include "CsvWriter.h"
 #include "CsvReader.h"
-#include "PositionPlotViewer.h"
+#include "PlotViewers/PositionPlotViewer.h"
+#include "PlotViewers/VelocityPlotViewer.h"
+#include "PlotViewers/PlotViewerVisitor.h"
 
 template<class T = std::mt19937, std::size_t N = T::state_size * sizeof(typename T::result_type)>
 T ProperlySeededRandomEngine () {
@@ -163,7 +165,7 @@ RemoteDataInterpreter::RemoteDataInterpreter()
     tracePlot->SetMargins(30, 30, 40, 60);
 
     plotViewer = std::monostate{};
-    plotViewer1 = new PositionPlotViewer(xCoordinatesOfRelativePosition, yCoordinatesOfRelativePosition);
+    plotViewer1 = new VelocityPlotViewer(xCoordinatesOfRelativePosition, yCoordinatesOfRelativePosition);
     plotViewer1->Show();
 
     mpFxyVector = new mpFXYVector();
@@ -360,7 +362,7 @@ void RemoteDataInterpreter::OnSocketEvent(wxSocketEvent& event)
         RemoteDataHandler remoteDataHandler(buf);
         actualAzimutDeg = remoteDataHandler.getAzimut();
         updateDataToPlotAcceleration(remoteDataHandler);
-        velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
+        velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAccelerationMperS2(),
                                                    remoteDataHandler.getTimeIntervalMs());
         updateDataToPlotVelocity(remoteDataHandler);
 
@@ -385,25 +387,28 @@ void RemoteDataInterpreter::OnStartButton(wxCommandEvent& event){
     if(event.GetEventObject() == connectButton) {
         //this is implementation of first step remote data handling
         std::cout << "On connect connectButton" << std::endl;
-        //                          azimut / xAcc / yAcc / zAcc / timeIntervalMs
+        //                          azimut / xAcc (m/s2) / yAcc / zAcc / timeIntervalMs
         std::array<char, 100> buff{"156 718 33 89 7 "};
         RemoteDataHandler remoteDataHandler(buff);
         actualAzimutDeg = remoteDataHandler.getAzimut();
         updateDataToPlotAcceleration(remoteDataHandler);
-        velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAcceleration(),
+        std::cout<<"DEB xACC: " << remoteDataHandler.getXAccelerationMperS2() << std::endl;
+        velocityCalculator.calculateActualVelocity(remoteDataHandler.getXAccelerationMperS2(),
                                                    remoteDataHandler.getTimeIntervalMs());
         updateDataToPlotVelocity(remoteDataHandler);
 
-        relativePositionCalculator.setPreviousRelativePosition({0.0,0.0});
+        const auto previousCalculatedRelativePosition = relativePositionCalculator.getCalculatedRelativePosition();
+        relativePositionCalculator.setPreviousRelativePosition(previousCalculatedRelativePosition);//?
         relativePositionCalculator.calculateActualRelativePosition(velocityCalculator.getActualVelocity(),
                                                                    remoteDataHandler.getTimeIntervalMs(),
                                                                    remoteDataHandler.getAzimut());
         updateDataToPlotRelativePosition(remoteDataHandler);
-        plotViewer1->updatePlot(xCoordinatesOfRelativePosition, yCoordinatesOfRelativePosition);
         if(isStartedMeasurementDistance){
             updateMeasuredDistance(velocityCalculator.getActualVelocity());
             areDataReceived = true;
         }
+        //std::visit(PlotViewerVisitor{}, *plotViewer1);
+        plotViewer1->updatePlot(timeSamples, velocityMperS);
         refreshPanel();
     }
     else if(event.GetEventObject() == startDistanceMeasurementButton)
@@ -671,7 +676,7 @@ void RemoteDataInterpreter::updateDataToPlotAcceleration(const RemoteDataHandler
         const auto actualTime{timeSamples.back() + remoteDataHandler.getTimeIntervalMs()};
         timeSamples.push_back(actualTime);
     }
-    accelerationMperS2.push_back(remoteDataHandler.getXAcceleration());
+    accelerationMperS2.push_back(remoteDataHandler.getXAccelerationMperS2());
 }
 
 void RemoteDataInterpreter::updateDataToPlotVelocity(const RemoteDataHandler &remoteDataHandler) {

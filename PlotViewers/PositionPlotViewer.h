@@ -3,7 +3,7 @@
 
 #include <wx/wx.h>
 #include <memory>
-#include "mathplot/mathplot.h"
+#include "../mathplot/mathplot.h"
 
 class PositionPlotViewer : public wxFrame {
 public:

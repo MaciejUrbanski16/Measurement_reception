@@ -7,16 +7,16 @@ float RemoteDataHandler::getAzimut() const {
     return azimut;
 }
 
-int32_t RemoteDataHandler::getXAcceleration() const {
-    return xAcceleration;
+float RemoteDataHandler::getXAccelerationMperS2() const {
+    return static_cast<float>(xAcceleration) / 1000;
 }
 
-int32_t RemoteDataHandler::getYAcceleration() const {
-    return yAcceleration;
+int32_t RemoteDataHandler::getYAccelerationMperS2() const {
+    return yAcceleration / 1000.0f;
 }
 
-int32_t RemoteDataHandler::getZAcceleration() const {
-    return zAcceleration;
+int32_t RemoteDataHandler::getZAccelerationMperS2() const {
+    return zAcceleration / 1000.0f;
 }
 
 int32_t RemoteDataHandler::getTimeIntervalMs() const {
@@ -56,7 +56,7 @@ void RemoteDataHandler::calculateXAcceleration() {
             xAccelerationAsString += buffer.at(i);
         }
         xAcceleration = atoi(xAccelerationAsString.c_str());
-        std::cout << "xAcc " << xAccelerationAsString << "A" << xAcceleration << std::endl;
+        std::cout << "xAcc " << xAccelerationAsString << "A" << static_cast<float>(xAcceleration) / 1000 << std::endl;
     } else{
         std::cerr<<"THERE ARE NO SPACE IN THE INPUT STRING FROM REMOTE DEVICE!!!"<<std::endl;
     }

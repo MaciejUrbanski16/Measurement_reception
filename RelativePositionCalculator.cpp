@@ -2,7 +2,7 @@
 #include <iostream>
 #include "RelativePositionCalculator.h"
 
-void RelativePositionCalculator::calculateActualRelativePosition(const uint64_t velocity, const int timeIntervalMs,
+void RelativePositionCalculator::calculateActualRelativePosition(const float velocity, const int timeIntervalMs,
                                                                  const float azimutDegree) {
     //y = tg(alpha) * x
     //x^2 + y^2 = r^2
@@ -10,7 +10,7 @@ void RelativePositionCalculator::calculateActualRelativePosition(const uint64_t 
     //a=1   b=tg^2(alpha)     c=r^2
     calculatedRelativePosition.first = previousRelativePosition.first;
     calculatedRelativePosition.second = previousRelativePosition.second;
-    const uint64_t lengthOfRoadFromLastMeasurementTimeInterval = velocity * timeIntervalMs;
+    const auto lengthOfRoadFromLastMeasurementTimeInterval = velocity * timeIntervalMs;
     const auto radius = pow(lengthOfRoadFromLastMeasurementTimeInterval, 2);
     std::cout<<"DEB before calculation(x: " << calculatedRelativePosition.first <<
                 "y: " << calculatedRelativePosition.second << ") lengthOfRoad: " << lengthOfRoadFromLastMeasurementTimeInterval

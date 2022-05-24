@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(SRC_FILES
         main.cpp mathplot/mathplot.h mathplot/mathplot.cpp
-        RemoteDataInterpreter.cpp RemoteDataInterpreter.h PseudoServerContext.cpp PseudoServerContext.h RemoteDataHandler.cpp RemoteDataHandler.h VelocityCalculator.cpp VelocityCalculator.h RelativePositionCalculator.cpp RelativePositionCalculator.h TimeFormatter.cpp TimeFormatter.h ManualMeasurements.h CsvWriter.cpp CsvWriter.h CsvReader.cpp CsvReader.h PositionPlotViewer.cpp PositionPlotViewer.h)
+        RemoteDataInterpreter.cpp RemoteDataInterpreter.h PseudoServerContext.cpp PseudoServerContext.h RemoteDataHandler.cpp RemoteDataHandler.h VelocityCalculator.cpp VelocityCalculator.h RelativePositionCalculator.cpp RelativePositionCalculator.h TimeFormatter.cpp TimeFormatter.h ManualMeasurements.h CsvWriter.cpp CsvWriter.h CsvReader.cpp CsvReader.h PlotViewers/PositionPlotViewer.cpp PlotViewers/PositionPlotViewer.h PlotViewers/VelocityPlotViewer.cpp PlotViewers/VelocityPlotViewer.h PlotViewers/PlotViewerVisitor.h)
 
 include_directories(
         includes

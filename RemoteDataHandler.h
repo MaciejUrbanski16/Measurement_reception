@@ -27,9 +27,9 @@ public:
     }
 
     float getAzimut() const;
-    int32_t getXAcceleration() const;
-    int32_t getYAcceleration() const;
-    int32_t getZAcceleration() const;
+    float getXAccelerationMperS2() const;
+    int32_t getYAccelerationMperS2() const;
+    int32_t getZAccelerationMperS2() const;
     int32_t getTimeIntervalMs() const;
 
     //this need some refactor

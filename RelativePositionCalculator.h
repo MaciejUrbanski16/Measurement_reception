@@ -19,7 +19,7 @@ struct QuadraticEquationCoefficients
 
 class RelativePositionCalculator {
 public:
-    void calculateActualRelativePosition(const uint64_t velocity, const int timeIntervalMs, const float azimutDegree);
+    void calculateActualRelativePosition(const float velocity, const int timeIntervalMs, const float azimutDegree);
     void setPreviousRelativePosition(std::pair<double, double> previousRelativePosition);
     [[nodiscard]] std::pair<double, double> getCalculatedRelativePosition() const;
 private:
